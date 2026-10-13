@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:15
+    container_name: ibsp_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-internal_business_strategic_platform}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ibsp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.dev.Dockerfile
+    container_name: ibsp_backend_dev
+    restart: unless-stopped
+    env_file:
+      - ../../src/backend/app/config/env/development.env
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-internal_business_strategic_platform}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../src/backend/app:/app/app
+      - ../../src/backend/db_migrations:/app/db_migrations
+    depends_on:
+      db:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ibsp_pgadmin_dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    volumes:
+      - ibsp_pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  ibsp_postgres_data:
+  ibsp_pgadmin_data:

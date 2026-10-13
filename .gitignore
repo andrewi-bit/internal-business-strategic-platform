@@ -1,0 +1,84 @@
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =========================
+# Virtual Environment
+# =========================
+.venv/
+venv/
+
+# =========================
+# Packaging / Build
+# =========================
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env
+src/backend/app/config/env/.env
+!.example.env
+!.env.example
+!src/backend/app/config/env/.example.env
+!src/backend/app/config/env/env.example
+/src/backend/app/config/env/development.env
+
+# =========================
+# Secrets / Credentials
+# =========================
+src/backend/app/config/credentials/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Database / Local Artifacts
+# =========================
+*.sqlite
+*.db
+
+# =========================
+# Testing & Linters
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Frontend
+# =========================
+node_modules/
+.nuxt/
+.output/
+dist/
