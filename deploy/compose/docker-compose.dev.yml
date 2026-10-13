@@ -1,16 +1,23 @@
+
+networks:
+  backend_net:
+    driver: bridge
+  db_net:
+    driver: bridge
+
 services:
   db:
     image: postgres:15
     container_name: ibsp_db_dev
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-internal_business_strategic_platform}
+    env_file:
+      - ../../src/backend/app/config/env/development.env
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - ibsp_postgres_data:/var/lib/postgresql/data
+    networks:
+      - db_net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -25,29 +32,31 @@ services:
     restart: unless-stopped
     env_file:
       - ../../src/backend/app/config/env/development.env
-    environment:
-      APP_ENV: development
-      DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-internal_business_strategic_platform}
     ports:
       - "8000:8000"
     volumes:
       - ../../src/backend/app:/app/app
       - ../../src/backend/db_migrations:/app/db_migrations
+    networks:
+      - backend_net
+      - db_net
     depends_on:
       db:
         condition: service_healthy
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:8.4
     container_name: ibsp_pgadmin_dev
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     volumes:
       - ibsp_pgadmin_data:/var/lib/pgadmin
+    networks:
+      - db_net
     depends_on:
       db:
         condition: service_healthy
