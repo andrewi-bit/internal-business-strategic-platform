@@ -1,9 +1,9 @@
 <template>
-  <LoginForm />
+  <LoginView />
 </template>
 
 <script setup lang="ts">
-import LoginForm from '../modules/auth/components/LoginForm.vue'
+import LoginView from '../modules/auth/components/LoginView.vue'
 
 definePageMeta({
   layout: 'auth'

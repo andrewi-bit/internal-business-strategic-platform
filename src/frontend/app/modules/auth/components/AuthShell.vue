@@ -55,20 +55,20 @@
 
       <div class="max-w-sm">
         <p class="text-xs font-semibold tracking-[0.18em] text-blue-200 uppercase">
-          Single sign-on
+          {{ eyebrow }}
         </p>
         <p
           class="mt-4 text-3xl leading-[1.15] font-semibold tracking-tight text-balance text-white xl:text-[2.5rem]"
         >
-          One secure sign-on for your whole workspace.
+          {{ asideTitle }}
         </p>
         <p class="mt-5 max-w-xs text-[15px] leading-relaxed text-blue-100/70">
-          Reach every internal tool with the Google account your organization already trusts.
+          {{ asideDescription }}
         </p>
       </div>
 
       <p class="text-xs text-blue-200/60">
-        Authorized access only
+        {{ asideFooter }}
       </p>
     </aside>
 
@@ -105,7 +105,17 @@
 </template>
 
 <script setup lang="ts">
-const { labelledby = 'auth-title' } = defineProps<{
+const {
+  labelledby = 'auth-title',
+  eyebrow = 'Single sign-on',
+  asideTitle = 'One secure sign-on for your whole workspace.',
+  asideDescription = 'Reach every internal tool with the Google account your organization already trusts.',
+  asideFooter = 'Authorized access only'
+} = defineProps<{
   labelledby?: string
+  eyebrow?: string
+  asideTitle?: string
+  asideDescription?: string
+  asideFooter?: string
 }>()
 </script>
