@@ -1,9 +1,9 @@
 <template>
-  <SignUpView />
+  <SignUpForm />
 </template>
 
 <script setup lang="ts">
-import SignUpView from '../modules/auth/components/SignUpView.vue'
+import SignUpForm from '../modules/auth/components/SignUpForm.vue'
 
 definePageMeta({
   layout: 'auth'
