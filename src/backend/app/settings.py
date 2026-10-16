@@ -17,7 +17,19 @@ class Settings(BaseSettings):
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
+    REFRESH_TOKEN_COOKIE_SECURE: bool = False
+    REFRESH_TOKEN_COOKIE_SAMESITE: str = "lax"
+
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
 
     PGADMIN_EMAIL: str = "admin@example.com"
     PGADMIN_PASSWORD: str = "admin"

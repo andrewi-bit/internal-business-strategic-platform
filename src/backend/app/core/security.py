@@ -2,6 +2,8 @@ from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
 
 import jwt
+import hashlib
+import secrets
 
 from app.settings import settings
 
@@ -10,7 +12,6 @@ password_hash = PasswordHash.recommended()
 def hash_password(password: str) -> str:
     """Hash password sebelum disimpan ke database."""
     return password_hash.hash(password)
-
 
 def verify_password(password: str, hashed_password: str) -> bool:
     """Verifikasi password terhadap hash yang tersimpan."""
@@ -34,7 +35,6 @@ def create_access_token(subject: str) -> str:
         algorithm=settings.JWT_ALGORITHM,
     )
 
-
 def decode_access_token(token: str) -> dict:
     """Decode and validate a JWT access token."""
     return jwt.decode(
@@ -42,3 +42,11 @@ def decode_access_token(token: str) -> dict:
         settings.JWT_SECRET_KEY,
         algorithms=[settings.JWT_ALGORITHM],
     )
+
+def create_refresh_token() -> str:
+    """Generate a cryptographically secure opaque refresh token."""
+    return secrets.token_urlsafe(64)
+
+def hash_refresh_token(token: str) -> str:
+    """Hash a refresh token before storing it in the database."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
