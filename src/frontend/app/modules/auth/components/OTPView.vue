@@ -103,10 +103,9 @@ const props = withDefaults(
   }>(),
   {
     email: '',
-    durationSeconds: 120 // 2 menit (02:00)
+    durationSeconds: 300 // 5 menit (05:00)
   }
 )
-
 const emit = defineEmits<{
   (e: 'verify', code: string): void
   (e: 'get-otp'): void
