@@ -7,18 +7,29 @@ import PendingRequestsTable from './PendingRequestsTable.vue'
 import ActiveUsersTable from './ActiveUsersTable.vue'
 import AssignRoleModal from './AssignRoleModal.vue'
 
-// State Modal Assign Role
+const toast = useToast()
+
+// State Modal Review & Assign Role
 const isAssignModalOpen = ref(false)
 const selectedUserForAssign = ref<PendingUserRequest | null>(null)
 
-// 1. Saat tombol Assign Role diklik di tabel Pending
-const handleAssignRole = (user: PendingUserRequest) => {
+// 1. Saat tombol Review diklik di tabel Pending
+const handleReviewUser = (user: PendingUserRequest) => {
   selectedUserForAssign.value = user
   isAssignModalOpen.value = true
 }
 
-// 2. Saat form modal disubmit (Role berhasil di-assign)
-const handleRoleAssigned = ({ user, role }: { user: PendingUserRequest; role: UserRole }) => {
+// 2. Saat Admin klik "Approve" pada Modal Review
+const handleApproveUser = (user: PendingUserRequest) => {
+  // Mapping role request ke UserRole sistem untuk tabel Active Users
+  let mappedRole: UserRole = 'Engineer'
+  const reqRole = String(user.requestedRole).toLowerCase()
+  if (reqRole.includes('commercial')) {
+    mappedRole = 'Commercial'
+  } else if (reqRole.includes('executive')) {
+    mappedRole = 'Executive'
+  }
+
   // A. Hapus user dari list pending
   pendingRequests.value = pendingRequests.value.filter((u) => u.id !== user.id)
 
@@ -27,7 +38,7 @@ const handleRoleAssigned = ({ user, role }: { user: PendingUserRequest; role: Us
     id: user.id,
     name: user.name,
     email: user.email,
-    role: role,
+    role: mappedRole,
     status: 'Active',
     assignedDate: 'Just now'
   })
@@ -35,9 +46,28 @@ const handleRoleAssigned = ({ user, role }: { user: PendingUserRequest; role: Us
   // C. Update counter angka KPI
   statsData.value.pendingRequests--
   statsData.value.activeUsers++
+
+  toast.add({
+    title: 'Request Approved',
+    description: `${user.name} has been approved as ${mappedRole}.`,
+    color: 'success'
+  })
 }
 
-// Data Statistik (4 KPI Cards)
+// 3. Saat Admin klik "Reject" pada Modal Review
+const handleRejectUser = (user: PendingUserRequest) => {
+  // Hapus dari pending requests
+  pendingRequests.value = pendingRequests.value.filter((u) => u.id !== user.id)
+  statsData.value.pendingRequests--
+
+  toast.add({
+    title: 'Request Rejected',
+    description: `Request for ${user.name} has been rejected.`,
+    color: 'error'
+  })
+}
+
+// Data Statistik (4 Top KPI Cards)
 const statsData = ref<UserStats>({
   pendingRequests: 8,
   totalUsers: 24,
@@ -45,67 +75,97 @@ const statsData = ref<UserStats>({
   inactiveUsers: 0
 })
 
-// Data Pending Access Requests (8 Data)
+// Data Pending Access Requests (Persis sesuai gambar referensi)
 const pendingRequests = ref<PendingUserRequest[]>([
   {
     id: '1',
     name: 'Andi Pratama',
     email: 'andi.pratama@company.com',
+    division: 'Technology',
+    requestedRole: 'Engineer / Project Lead',
     requestDate: 'Oct 10, 2026 09:15',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'I need access to manage technical portfolio data and review partner capabilities for ongoing projects. This role is required to support my current responsibilities in the technology division.'
   },
   {
     id: '2',
     name: 'Sarah Wijaya',
     email: 'sarah.wijaya@company.com',
+    division: 'Commercial',
+    requestedRole: 'Commercial / Partnership Officer',
     requestDate: 'Oct 11, 2026 14:22',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'Need access to manage partner accounts, partnership documents, and monitor collaboration pipelines.'
   },
   {
     id: '3',
     name: 'Budi Santoso',
     email: 'budi.santoso@company.com',
+    division: 'Technology',
+    requestedRole: 'Engineer / Project Lead',
     requestDate: 'Oct 12, 2026 10:37',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'Require platform access to update system architecture records and engineering project metrics.'
   },
   {
     id: '4',
     name: 'Maya Putri',
     email: 'maya.putri@company.com',
+    division: 'Operations',
+    requestedRole: 'Commercial / Partnership Officer',
     requestDate: 'Oct 12, 2026 16:05',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'Responsible for coordinating strategic partner vendor relationships and SLAs across operating units.'
   },
   {
     id: '5',
     name: 'Daniel Kurniawan',
     email: 'daniel.kurniawan@company.com',
+    division: 'Technology',
+    requestedRole: 'Engineer / Project Lead',
     requestDate: 'Oct 13, 2026 08:21',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'Need access to upload technical documentation and perform project milestone evaluations.'
   },
   {
     id: '6',
     name: 'Fajar Nugraha',
     email: 'fajar.nugraha@company.com',
+    division: 'Technology',
+    requestedRole: 'Engineer / Project Lead',
     requestDate: 'Oct 13, 2026 10:11',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason:
+      'Reviewing technology integrations and code deliverables from registered technology partners.'
   },
   {
     id: '7',
     name: 'Rina Marlina',
     email: 'rina.marlina@company.com',
+    division: 'Commercial',
+    requestedRole: 'Commercial / Partnership Officer',
     requestDate: 'Oct 13, 2026 11:45',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason: 'Managing ongoing commercial partner contract reviews and renewal schedules.'
   },
   {
     id: '8',
     name: 'Hendra Setiawan',
     email: 'hendra.setiawan@company.com',
+    division: 'Operations',
+    requestedRole: 'Commercial / Partnership Officer',
     requestDate: 'Oct 13, 2026 13:20',
-    status: 'Pending'
+    status: 'Pending',
+    requestReason: 'Tracking operational synergy and partner deliverables for enterprise clients.'
   }
 ])
 
-// Data Users Internal (16 Data dengan Role)
+// Data Users Internal (16 Active Users)
 const activeUsers = ref<ActiveUser[]>([
   {
     id: '1',
@@ -268,17 +328,18 @@ const handleExport = () => {
     <UsersStatsCards :stats="statsData" />
 
     <!-- 2. Pending Access Requests Table -->
-    <PendingRequestsTable :requests="pendingRequests" @assign-role="handleAssignRole" />
+    <PendingRequestsTable :requests="pendingRequests" @review="handleReviewUser" />
 
     <!-- 3. Active Users Table -->
     <ActiveUsersTable :users="activeUsers" @manage-user="handleManageUser" @export="handleExport" />
 
-    <!-- 4. Modal Popup Assign Role -->
+    <!-- 4. Modal Popup Review Role Request (Approve & Reject) -->
     <AssignRoleModal
       :is-open="isAssignModalOpen"
       :user="selectedUserForAssign"
       @close="isAssignModalOpen = false"
-      @submit="handleRoleAssigned"
+      @approve="handleApproveUser"
+      @reject="handleRejectUser"
     />
   </div>
 </template>
