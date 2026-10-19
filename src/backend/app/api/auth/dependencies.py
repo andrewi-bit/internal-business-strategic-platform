@@ -1,10 +1,12 @@
 from uuid import UUID
 
 import jwt
+import hashlib
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from redis.asyncio import Redis
+from app.connections.redis import get_redis
 from app.api.auth import repository
 from app.connections.session import get_db
 from app.core.security import decode_access_token
@@ -15,6 +17,7 @@ bearer_scheme = HTTPBearer()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> User:
     token = credentials.credentials
 
@@ -23,7 +26,12 @@ async def get_current_user(
         detail="Token tidak valid atau sudah kedaluwarsa",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    is_revoked = await redis.exists(f"revoked_access_token:{token_hash}")
 
+    if is_revoked:
+        raise credentials_exception
     try:
         payload = decode_access_token(token)
         subject = payload.get("sub")

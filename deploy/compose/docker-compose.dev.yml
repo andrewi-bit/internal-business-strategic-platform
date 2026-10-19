@@ -1,4 +1,3 @@
-
 networks:
   backend_net:
     driver: bridge
@@ -43,6 +42,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   pgadmin:
     image: dpage/pgadmin4:8.4
@@ -60,6 +61,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: ibsp_redis_dev
+    restart: unless-stopped
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   ibsp_postgres_data:

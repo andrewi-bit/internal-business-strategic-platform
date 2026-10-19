@@ -18,6 +18,24 @@ async def get_user_by_email(
     )
     return result.scalar_one_or_none()
 
+async def get_user_by_google_id(
+    db: AsyncSession,
+    google_id: str,
+) -> User | None:
+    result = await db.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    return result.scalar_one_or_none()
+
+async def link_google_id(
+    db: AsyncSession,
+    user: User,
+    google_id: str,
+) -> User:
+    user.google_id = google_id
+    await db.flush()
+    return user
+
 async def create_user(
     db: AsyncSession,
     *,
@@ -72,7 +90,6 @@ async def create_refresh_token(
     await db.flush()
 
     return refresh_token
-
 
 async def get_refresh_token_by_hash(
     db: AsyncSession,

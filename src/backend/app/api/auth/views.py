@@ -1,6 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+import hashlib
+from datetime import datetime, timezone, timedelta
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
+from authlib.integrations.starlette_client import OAuth
+from uuid import uuid4
+from app.connections.redis import get_redis
+from app.api.auth.dependencies import bearer_scheme, get_current_user
+from app.core.security import decode_access_token, create_access_token, create_refresh_token, hash_refresh_token
+from app.api.auth import repository
 
 from app.api.auth.schema import (
     RegisterRequest,
@@ -17,12 +35,177 @@ from app.api.auth.usecase import (
 )
 from app.connections.session import get_db
 from app.settings import settings
-from app.api.auth.dependencies import get_current_user
 from app.models.user_model import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+oauth = OAuth()
+
+oauth.register(
+    name="google",
+    client_id=settings.GOOGLE_CLIENT_ID,
+    client_secret=settings.GOOGLE_CLIENT_SECRET,
+    server_metadata_url=(
+        "https://accounts.google.com/.well-known/openid-configuration"
+    ),
+    client_kwargs={
+        "scope": "openid email profile",
+    },
+)
+
 COOKIE_PATH = f"{settings.API_V1_PREFIX}/auth"
+
+@router.get(
+    "/google/login",
+    summary="Get Google Login URL",
+    description="Mengembalikan URL autentikasi Google untuk dibuka oleh browser.",
+)
+async def google_login(request: Request):
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
+
+    redirect_response = await oauth.google.authorize_redirect(
+        request,
+        redirect_uri,
+    )
+
+    return {
+        "login_url": redirect_response.headers["location"]
+    }
+
+@router.get("/google/callback")
+async def google_callback(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get("userinfo")
+
+        if not user_info:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Informasi akun Google tidak tersedia",
+            )
+
+        google_id = user_info.get("sub")
+        email = str(user_info.get("email", "")).strip().lower()
+        full_name = user_info.get("name") or email
+        email_verified = user_info.get("email_verified", False)
+        hosted_domain = user_info.get("hd", "")
+
+        allowed_domain = settings.GOOGLE_ALLOWED_DOMAIN.lower()
+
+        if (
+            not google_id
+            or not email
+            or email.rsplit("@", 1)[-1] != allowed_domain
+            or hosted_domain.lower() != allowed_domain
+            or email_verified is not True
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Akun Google tidak diizinkan",
+            )
+
+        user = await repository.get_user_by_google_id(
+            db,
+            google_id,
+        )
+
+        if user is None:
+            user = await repository.get_user_by_email(db, email)
+
+            if user is not None:
+                if user.email_verified_at is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Verifikasi email akun manual terlebih dahulu",
+                    )
+
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Akun tidak aktif",
+                    )
+
+                if user.google_id is not None:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Akun Google sudah terhubung ke akun lain",
+                    )
+
+                await repository.link_google_id(
+                    db,
+                    user,
+                    google_id,
+                )
+
+            else:
+                user = User(
+                    email=email,
+                    full_name=full_name,
+                    google_id=google_id,
+                    email_verified_at=datetime.now(timezone.utc),
+                    role_id=None,
+                    is_active=True,
+                )
+                db.add(user)
+                await db.flush()
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Akun tidak aktif",
+            )
+
+        if user.email_verified_at is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email belum diverifikasi",
+            )
+
+        now = datetime.now(timezone.utc)
+        raw_refresh_token = create_refresh_token()
+
+        user.last_login_at = now
+
+        await repository.create_refresh_token(
+            db,
+            user_id=user.id,
+            family_id=uuid4(),
+            token_hash=hash_refresh_token(raw_refresh_token),
+            expires_at=now + timedelta(
+                days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            ),
+        )
+
+        await db.commit()
+
+        set_refresh_cookie(response, raw_refresh_token)
+
+        access_token = create_access_token(str(user.id))
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+        }
+
+    except HTTPException:
+        await db.rollback()
+        raise
+    except IntegrityError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Akun sudah terdaftar atau terhubung",
+        ) from exc
+    except Exception as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Autentikasi Google gagal",
+        ) from exc
 
 def set_refresh_cookie(response: Response, token: str) -> None:
     response.set_cookie(
@@ -154,14 +337,40 @@ async def refresh(
 async def logout(
     request: Request,
     response: Response,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> Response:
+    access_token = credentials.credentials
+    payload = decode_access_token(access_token)
+
+    expires_at = payload.get("exp")
+    if expires_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token tidak memiliki waktu kedaluwarsa",
+        )
+
+    ttl = int(expires_at - datetime.now(timezone.utc).timestamp())
+
+    if ttl > 0:
+        token_hash = hashlib.sha256(
+            access_token.encode("utf-8")
+        ).hexdigest()
+
+        await redis.set(
+            f"revoked_access_token:{token_hash}",
+            "1",
+            ex=ttl,
+        )
+
     refresh_token = request.cookies.get(
         settings.REFRESH_TOKEN_COOKIE_NAME
     )
 
     await logout_user(db, refresh_token)
     clear_refresh_cookie(response)
-
     response.status_code = status.HTTP_204_NO_CONTENT
+
     return response

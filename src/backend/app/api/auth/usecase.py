@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+from app.models.user_model import User
+
 from app.api.auth import repository
 from app.api.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse
 from app.api.email_verification import repository as otp_repository

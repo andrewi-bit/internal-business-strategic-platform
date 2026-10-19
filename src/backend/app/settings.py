@@ -13,7 +13,18 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    REDIS_URL: str = "redis://redis:6379/0"
+
+    SESSION_SECRET_KEY: str
+
     FRONTEND_URL: str = "http://localhost:3000"
+
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = (
+        "http://localhost:8000/api/v1/auth/google/callback"
+    )
+    GOOGLE_ALLOWED_DOMAIN: str = "bangunindo.com"
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
