@@ -359,31 +359,31 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 </script>
 
 <template>
-  <div class="space-y-1">
+  <div class="flex flex-col gap-3">
     <!-- 1. Summary Cards -->
-    <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div
         v-for="card in summaryCards"
         :key="card.label"
-        class="flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2 py-1 shadow-2xs"
+        class="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-3 shadow-2xs"
       >
         <div
-          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
           :class="card.iconClass"
         >
           <UIcon
             :name="card.icon"
-            class="h-3 w-3"
+            class="h-4.5 w-4.5"
           />
         </div>
-        <p class="shrink-0 text-sm leading-none font-bold text-slate-900">
-          {{ card.value }}
-        </p>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-[10px] leading-none font-semibold text-slate-700">
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
             {{ card.label }}
           </p>
-          <p class="mt-0.5 truncate text-[9px] leading-none text-slate-400">
+          <p class="mt-1 text-xl leading-none font-bold text-slate-900">
+            {{ card.value }}
+          </p>
+          <p class="mt-1 text-[11px] leading-tight text-slate-400">
             {{ card.description }}
           </p>
         </div>
@@ -391,41 +391,41 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
     </div>
 
     <!-- 2. Project Collaboration History -->
-    <div class="rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs">
+    <div class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-2xs">
       <div
-        class="flex flex-col gap-1 border-b border-slate-100 pb-1 lg:flex-row lg:items-center lg:justify-between lg:gap-2"
+        class="flex flex-col gap-3 border-b border-slate-100 pb-3 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <h2 class="shrink-0 text-[11px] leading-none font-bold tracking-tight text-slate-900">
+        <div class="min-w-0">
+          <h2 class="text-sm font-semibold tracking-tight text-slate-900">
             Project Collaboration History
           </h2>
-          <p class="min-w-0 truncate text-[10px] leading-none text-slate-400">
+          <p class="mt-0.5 text-xs text-slate-500">
             All joint projects and initiatives delivered together with this partner.
           </p>
         </div>
 
         <!-- Controls: Search, Status Filter, Year Filter, Export -->
-        <div class="flex flex-wrap items-center gap-1 lg:flex-nowrap">
-          <div class="relative w-36 shrink sm:w-40 lg:w-44">
+        <div class="flex flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="relative w-full min-w-0 sm:w-52 lg:w-64">
             <div
-              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1.5 text-slate-400"
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
             >
               <UIcon
                 name="i-lucide-search"
-                class="h-3 w-3"
+                class="h-4 w-4"
               />
             </div>
             <input
               v-model="projectSearch"
               type="text"
               placeholder="Search project name or description..."
-              class="h-6 w-full overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-slate-200 bg-white py-0 pr-2 pl-6 text-[11px] text-slate-800 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-9 text-xs text-slate-800 placeholder-slate-400 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
           </div>
 
           <select
             v-model="projectStatus"
-            class="h-6 shrink-0 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
+            class="h-9 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
           >
             <option value="">
               All Status
@@ -440,7 +440,7 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <select
             v-model="projectYear"
-            class="h-6 shrink-0 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
+            class="h-9 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
           >
             <option value="">
               All Years
@@ -456,107 +456,113 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <button
             type="button"
-            class="inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+            class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
             @click="handleExport('Project Collaboration History')"
           >
             <UIcon
               name="i-lucide-download"
-              class="h-3 w-3 text-slate-500"
+              class="h-4 w-4 text-slate-500"
             />
             <span>Export</span>
             <UIcon
               name="i-lucide-chevron-down"
-              class="h-2.5 w-2.5 text-slate-400"
+              class="h-3 w-3 text-slate-400"
             />
           </button>
         </div>
       </div>
 
-      <div class="mt-0.5 overflow-x-auto">
-        <table class="w-full table-fixed text-left text-[10px]">
-          <thead class="border-b border-slate-100 text-[9px] font-bold text-slate-400">
+      <div class="mt-3 min-w-0 overflow-x-auto">
+        <table class="w-full table-fixed text-left text-xs">
+          <thead class="border-b border-slate-100 text-[11px] font-semibold tracking-wide text-slate-500">
             <tr>
-              <th class="w-[34%] px-1.5 py-0.5">
+              <th class="w-[34%] px-1.5 py-2">
                 Project / Initiative
               </th>
-              <th class="w-[20%] px-1.5 py-0.5">
+              <th class="w-[20%] px-1.5 py-2">
                 Partner Contribution
               </th>
-              <th class="w-[13%] px-1.5 py-0.5">
+              <th class="w-[13%] px-1.5 py-2">
                 Start Date
               </th>
-              <th class="w-[13%] px-1.5 py-0.5">
+              <th class="w-[13%] px-1.5 py-2">
                 End Date
               </th>
-              <th class="w-[12%] px-1.5 py-0.5">
+              <th class="w-[12%] px-1.5 py-2">
                 Status
               </th>
-              <th class="w-[8%] px-1.5 py-0.5 text-right">
+              <th class="w-[8%] px-1.5 py-2 text-right">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 font-medium">
+          <tbody class="divide-y divide-slate-100">
             <tr
               v-for="project in pagedProjects"
               :key="project.id"
-              class="hover:bg-slate-50/60 transition-colors"
+              class="transition-colors hover:bg-slate-50/60"
             >
-              <td class="px-1.5 py-0.5">
-                <div class="flex items-center gap-1.5">
+              <td class="px-1.5 py-1">
+                <div class="flex items-center gap-2.5">
                   <div
-                    class="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded bg-blue-50 text-blue-600"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
                   >
                     <UIcon
                       name="i-lucide-briefcase"
-                      class="h-3 w-3"
+                      class="h-4 w-4"
                     />
                   </div>
                   <div class="min-w-0">
-                    <p class="truncate leading-none font-bold text-slate-900">
+                    <p
+                      class="truncate text-xs font-semibold text-slate-800"
+                      :title="project.name"
+                    >
                       {{ project.name }}
                     </p>
-                    <p class="mt-0.5 truncate text-[9px] leading-none text-slate-400">
+                    <p
+                      class="truncate text-[11px] text-slate-400"
+                      :title="project.description"
+                    >
                       {{ project.description }}
                     </p>
                   </div>
                 </div>
               </td>
 
-              <td class="px-1.5 py-0.5 leading-tight text-slate-600">
-                {{ project.contribution }}
+              <td class="px-1.5 py-1 text-slate-600">
+                <span class="line-clamp-2">{{ project.contribution }}</span>
               </td>
 
-              <td class="px-1.5 py-0.5 leading-tight text-slate-500">
+              <td class="px-1.5 py-1 text-[11px] whitespace-nowrap text-slate-500">
                 {{ project.startDate }}
               </td>
 
-              <td class="px-1.5 py-0.5 leading-tight text-slate-500">
+              <td class="px-1.5 py-1 text-[11px] whitespace-nowrap text-slate-500">
                 {{ project.endDate }}
               </td>
 
-              <td class="px-1.5 py-0.5">
+              <td class="px-1.5 py-1 whitespace-nowrap">
                 <span
-                  class="inline-flex items-center rounded-full border px-1 py-0 text-[9px] font-semibold"
+                  class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold"
                   :class="getStatusClass(project.status)"
                 >
                   {{ project.status }}
                 </span>
               </td>
 
-              <td class="px-1.5 py-0.5 text-right">
+              <td class="py-1 pl-1.5 text-right">
                 <UDropdownMenu
                   :items="projectMenuItems(project)"
                   :content="{ align: 'end' }"
                 >
                   <button
                     type="button"
-                    class="inline-flex h-4.5 w-4.5 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                     aria-label="Project actions"
                   >
                     <UIcon
                       name="i-lucide-ellipsis-vertical"
-                      class="h-3.5 w-3.5"
+                      class="h-4 w-4"
                     />
                   </button>
                 </UDropdownMenu>
@@ -566,17 +572,17 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
             <tr v-if="filteredProjects.length === 0">
               <td
                 colspan="6"
-                class="px-4 py-4 text-center"
+                class="px-4 py-6 text-center"
               >
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-1.5">
                   <UIcon
                     name="i-lucide-search-x"
-                    class="h-5 w-5 text-slate-300"
+                    class="h-6 w-6 text-slate-300"
                   />
-                  <p class="text-[11px] font-semibold text-slate-600">
+                  <p class="text-xs font-semibold text-slate-600">
                     No projects found
                   </p>
-                  <p class="text-[10px] text-slate-400">
+                  <p class="text-[11px] text-slate-400">
                     Try adjusting your search or filters.
                   </p>
                 </div>
@@ -587,8 +593,8 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
       </div>
 
       <!-- Project Pagination -->
-      <div class="mt-0.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-0.5">
-        <p class="text-[9px] text-slate-500">
+      <div class="flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+        <p class="text-xs text-slate-500">
           Showing
           <span class="font-semibold text-slate-700">{{ projectRangeStart }}</span>
           to
@@ -600,14 +606,14 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             :disabled="projectPage <= 1"
             aria-label="Previous page"
             @click="projectPage--"
           >
             <UIcon
               name="i-lucide-chevron-left"
-              class="h-2.5 w-2.5"
+              class="h-3.5 w-3.5"
             />
           </button>
 
@@ -615,7 +621,7 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
             v-for="page in totalProjectPages"
             :key="page"
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center text-[9px] font-semibold cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-semibold cursor-pointer"
             :class="[
               projectPage === page
                 ? 'bg-blue-600 text-white shadow-2xs'
@@ -628,14 +634,14 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <button
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             :disabled="projectPage >= totalProjectPages"
             aria-label="Next page"
             @click="projectPage++"
           >
             <UIcon
               name="i-lucide-chevron-right"
-              class="h-2.5 w-2.5"
+              class="h-3.5 w-3.5"
             />
           </button>
         </div>
@@ -643,41 +649,41 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
     </div>
 
     <!-- 3. Enablement & Co-Marketing History -->
-    <div class="rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs">
+    <div class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-2xs">
       <div
-        class="flex flex-col gap-1 border-b border-slate-100 pb-1 lg:flex-row lg:items-center lg:justify-between lg:gap-2"
+        class="flex flex-col gap-3 border-b border-slate-100 pb-3 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <h2 class="shrink-0 text-[11px] leading-none font-bold tracking-tight text-slate-900">
+        <div class="min-w-0">
+          <h2 class="text-sm font-semibold tracking-tight text-slate-900">
             Enablement & Co-Marketing History
           </h2>
-          <p class="min-w-0 truncate text-[10px] leading-none text-slate-400">
+          <p class="mt-0.5 text-xs text-slate-500">
             Training, enablement programs, and joint marketing activities with this partner.
           </p>
         </div>
 
         <!-- Controls: Search, Type Filter, Year Filter, Export -->
-        <div class="flex flex-wrap items-center gap-1 lg:flex-nowrap">
-          <div class="relative w-36 shrink sm:w-40 lg:w-44">
+        <div class="flex flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="relative w-full min-w-0 sm:w-52 lg:w-64">
             <div
-              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1.5 text-slate-400"
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
             >
               <UIcon
                 name="i-lucide-search"
-                class="h-3 w-3"
+                class="h-4 w-4"
               />
             </div>
             <input
               v-model="activitySearch"
               type="text"
               placeholder="Search activity name or description..."
-              class="h-6 w-full overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-slate-200 bg-white py-0 pr-2 pl-6 text-[11px] text-slate-800 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-9 text-xs text-slate-800 placeholder-slate-400 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
           </div>
 
           <select
             v-model="activityType"
-            class="h-6 shrink-0 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
+            class="h-9 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
           >
             <option value="">
               All Types
@@ -692,7 +698,7 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <select
             v-model="activityYear"
-            class="h-6 shrink-0 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
+            class="h-9 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-blue-500 focus:outline-none cursor-pointer"
           >
             <option value="">
               All Years
@@ -708,56 +714,56 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <button
             type="button"
-            class="inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+            class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
             @click="handleExport('Enablement & Co-Marketing History')"
           >
             <UIcon
               name="i-lucide-download"
-              class="h-3 w-3 text-slate-500"
+              class="h-4 w-4 text-slate-500"
             />
             <span>Export</span>
             <UIcon
               name="i-lucide-chevron-down"
-              class="h-2.5 w-2.5 text-slate-400"
+              class="h-3 w-3 text-slate-400"
             />
           </button>
         </div>
       </div>
 
-      <div class="mt-0.5 overflow-x-auto">
-        <table class="w-full table-fixed text-left text-[10px]">
-          <thead class="border-b border-slate-100 text-[9px] font-bold text-slate-400">
+      <div class="mt-3 min-w-0 overflow-x-auto">
+        <table class="w-full table-fixed text-left text-xs">
+          <thead class="border-b border-slate-100 text-[11px] font-semibold tracking-wide text-slate-500">
             <tr>
-              <th class="w-[28%] px-1.5 py-0.5">
+              <th class="w-[22%] px-1.5 py-2">
                 Activity Name
               </th>
-              <th class="w-[12%] px-1.5 py-0.5">
+              <th class="w-[14%] px-1.5 py-2">
                 Type
               </th>
-              <th class="w-[34%] px-1.5 py-0.5">
+              <th class="w-[31%] px-1.5 py-2">
                 Description
               </th>
-              <th class="w-[12%] px-1.5 py-0.5">
+              <th class="w-[12%] px-1.5 py-2">
                 Date
               </th>
-              <th class="w-[8%] px-1.5 py-0.5">
+              <th class="w-[14%] px-1.5 py-2">
                 Status
               </th>
-              <th class="w-[6%] px-1.5 py-0.5 text-right">
+              <th class="w-[7%] px-1.5 py-2 text-right">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 font-medium">
+          <tbody class="divide-y divide-slate-100">
             <tr
               v-for="activity in pagedActivities"
               :key="activity.id"
-              class="hover:bg-slate-50/60 transition-colors"
+              class="transition-colors hover:bg-slate-50/60"
             >
-              <td class="px-1.5 py-0.5">
-                <div class="flex items-center gap-1.5">
+              <td class="px-1.5 py-1">
+                <div class="flex items-center gap-2.5">
                   <div
-                    class="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                     :class="
                       activity.type === 'Enablement'
                         ? 'bg-emerald-50 text-emerald-600'
@@ -770,54 +776,57 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
                           ? 'i-lucide-graduation-cap'
                           : 'i-lucide-megaphone'
                       "
-                      class="h-3 w-3"
+                      class="h-4 w-4"
                     />
                   </div>
-                  <span class="min-w-0 truncate leading-none font-bold text-slate-900">
+                  <span
+                    class="min-w-0 truncate text-xs font-semibold text-slate-800"
+                    :title="activity.name"
+                  >
                     {{ activity.name }}
                   </span>
                 </div>
               </td>
 
-              <td class="px-1.5 py-0.5">
+              <td class="px-1.5 py-1 whitespace-nowrap">
                 <span
-                  class="inline-flex items-center rounded border px-1 py-0 text-[9px] font-semibold"
+                  class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
                   :class="getTypeClass(activity.type)"
                 >
                   {{ activity.type }}
                 </span>
               </td>
 
-              <td class="px-1.5 py-0.5 leading-tight text-slate-600">
+              <td class="px-1.5 py-1 text-slate-600">
                 <span class="line-clamp-2">{{ activity.description }}</span>
               </td>
 
-              <td class="px-1.5 py-0.5 leading-tight text-slate-500">
+              <td class="px-1.5 py-1 text-[11px] whitespace-nowrap text-slate-500">
                 {{ activity.date }}
               </td>
 
-              <td class="px-1.5 py-0.5">
+              <td class="px-1.5 py-1 whitespace-nowrap">
                 <span
-                  class="inline-flex items-center rounded-full border px-1 py-0 text-[9px] font-semibold"
+                  class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold"
                   :class="getStatusClass(activity.status)"
                 >
                   {{ activity.status }}
                 </span>
               </td>
 
-              <td class="px-1.5 py-0.5 text-right">
+              <td class="py-1 pl-1.5 text-right">
                 <UDropdownMenu
                   :items="activityMenuItems(activity)"
                   :content="{ align: 'end' }"
                 >
                   <button
                     type="button"
-                    class="inline-flex h-4.5 w-4.5 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                     aria-label="Activity actions"
                   >
                     <UIcon
                       name="i-lucide-ellipsis-vertical"
-                      class="h-3.5 w-3.5"
+                      class="h-4 w-4"
                     />
                   </button>
                 </UDropdownMenu>
@@ -827,17 +836,17 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
             <tr v-if="filteredActivities.length === 0">
               <td
                 colspan="6"
-                class="px-4 py-4 text-center"
+                class="px-4 py-6 text-center"
               >
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-1.5">
                   <UIcon
                     name="i-lucide-search-x"
-                    class="h-5 w-5 text-slate-300"
+                    class="h-6 w-6 text-slate-300"
                   />
-                  <p class="text-[11px] font-semibold text-slate-600">
+                  <p class="text-xs font-semibold text-slate-600">
                     No activities found
                   </p>
-                  <p class="text-[10px] text-slate-400">
+                  <p class="text-[11px] text-slate-400">
                     Try adjusting your search or filters.
                   </p>
                 </div>
@@ -848,8 +857,8 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
       </div>
 
       <!-- Activity Pagination -->
-      <div class="mt-0.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-0.5">
-        <p class="text-[9px] text-slate-500">
+      <div class="flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+        <p class="text-xs text-slate-500">
           Showing
           <span class="font-semibold text-slate-700">{{ activityRangeStart }}</span>
           to
@@ -861,14 +870,14 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             :disabled="activityPage <= 1"
             aria-label="Previous page"
             @click="activityPage--"
           >
             <UIcon
               name="i-lucide-chevron-left"
-              class="h-2.5 w-2.5"
+              class="h-3.5 w-3.5"
             />
           </button>
 
@@ -876,7 +885,7 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
             v-for="page in totalActivityPages"
             :key="page"
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center text-[9px] font-semibold cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-semibold cursor-pointer"
             :class="[
               activityPage === page
                 ? 'bg-blue-600 text-white shadow-2xs'
@@ -889,14 +898,14 @@ const activityMenuItems = (activity: HistoryActivity): RowMenuItem[][] => [
 
           <button
             type="button"
-            class="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             :disabled="activityPage >= totalActivityPages"
             aria-label="Next page"
             @click="activityPage++"
           >
             <UIcon
               name="i-lucide-chevron-right"
-              class="h-2.5 w-2.5"
+              class="h-3.5 w-3.5"
             />
           </button>
         </div>
