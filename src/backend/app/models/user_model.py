@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     func,
     text,
@@ -48,6 +49,12 @@ class User(Base):
         nullable=False,
         default=True,
         server_default=text("true"),
+    )
+    token_version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
     )
     last_login_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
