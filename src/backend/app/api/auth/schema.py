@@ -37,3 +37,17 @@ class CurrentUserResponse(BaseModel):
     email: EmailStr
     full_name: str
     is_active: bool
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=8, max_length=128)
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+

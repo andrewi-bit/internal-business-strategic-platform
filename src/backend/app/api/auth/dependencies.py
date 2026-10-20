@@ -32,11 +32,18 @@ async def get_current_user(
 
     if is_revoked:
         raise credentials_exception
+
     try:
         payload = decode_access_token(token)
         subject = payload.get("sub")
+        token_version = payload.get("ver")
 
-        if not subject:
+        if (
+            not subject
+            or isinstance(token_version, bool)
+            or not isinstance(token_version, int)
+            or token_version < 0
+        ):
             raise credentials_exception
 
         user_id = UUID(subject)
@@ -46,7 +53,12 @@ async def get_current_user(
 
     user = await repository.get_user_by_id(db, user_id)
 
-    if user is None or not user.is_active or user.email_verified_at is None:
+    if (
+        user is None
+        or not user.is_active
+        or user.email_verified_at is None
+        or token_version != user.token_version
+    ):
         raise credentials_exception
 
     return user

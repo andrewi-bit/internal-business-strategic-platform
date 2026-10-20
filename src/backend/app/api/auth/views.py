@@ -26,12 +26,18 @@ from app.api.auth.schema import (
     LoginRequest,
     LoginResponse,
     CurrentUserResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
 )
 from app.api.auth.usecase import (
     register_user,
     login_user,
     refresh_access_token,
     logout_user,
+    request_password_reset,
+    reset_password,
 )
 from app.connections.session import get_db
 from app.settings import settings
@@ -184,7 +190,10 @@ async def google_callback(
 
         set_refresh_cookie(response, raw_refresh_token)
 
-        access_token = create_access_token(str(user.id))
+        access_token = create_access_token(
+            str(user.id),
+            user.token_version,
+        )
 
         return {
             "access_token": access_token,
@@ -273,6 +282,41 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(exc),
+        ) from exc
+
+@router.post(
+    "/forgot-password",
+    response_model=ForgotPasswordResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ForgotPasswordResponse:
+    return await request_password_reset(
+        db,
+        str(payload.email),
+    )
+
+@router.post(
+    "/reset-password",
+    response_model=ResetPasswordResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def reset_password_endpoint(
+    payload: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ResetPasswordResponse:
+    try:
+        return await reset_password(
+            db,
+            payload.token,
+            payload.new_password,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token reset tidak valid atau kedaluwarsa",
         ) from exc
 
 @router.get(

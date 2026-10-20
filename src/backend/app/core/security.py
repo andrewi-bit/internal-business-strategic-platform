@@ -17,12 +17,16 @@ def verify_password(password: str, hashed_password: str) -> bool:
     """Verifikasi password terhadap hash yang tersimpan."""
     return password_hash.verify(password, hashed_password)
 
-def create_access_token(subject: str) -> str:
+def create_access_token(
+    subject: str,
+    token_version: int = 0,
+) -> str:
     """Create a signed JWT access token."""
     now = datetime.now(timezone.utc)
 
     payload = {
         "sub": subject,
+        "ver": token_version,
         "iat": now,
         "exp": now + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -49,4 +53,12 @@ def create_refresh_token() -> str:
 
 def hash_refresh_token(token: str) -> str:
     """Hash a refresh token before storing it in the database."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+def create_password_reset_token() -> str:
+    """Generate a cryptographically secure password reset token."""
+    return secrets.token_urlsafe(32)
+
+def hash_password_reset_token(token: str) -> str:
+    """Hash a password reset token before storing it in the database."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()

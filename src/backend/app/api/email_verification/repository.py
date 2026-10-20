@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.email_otp_model import EmailOTP
 
-
 async def create_otp(
     db: AsyncSession,
     *,
@@ -22,7 +21,6 @@ async def create_otp(
     db.add(otp)
     await db.flush()
     return otp
-
 
 async def get_latest_valid_otp(
     db: AsyncSession,
@@ -42,7 +40,6 @@ async def get_latest_valid_otp(
         .limit(1)
     )
     return result.scalar_one_or_none()
-
 
 async def invalidate_unused_otps(
     db: AsyncSession,

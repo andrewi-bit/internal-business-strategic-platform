@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user_model import User
 from app.models.token_model import RefreshToken
+from app.models.password_reset_token_model import PasswordResetToken
 
 async def get_user_by_email(
     db: AsyncSession,
@@ -60,6 +61,17 @@ async def get_user_by_id(
 ) -> User | None:
     result = await db.execute(
         select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+
+async def get_user_by_id_for_update(
+    db: AsyncSession,
+    user_id: UUID,
+) -> User | None:
+    result = await db.execute(
+        select(User)
+        .where(User.id == user_id)
+        .with_for_update()
     )
     return result.scalar_one_or_none()
 
@@ -126,6 +138,75 @@ async def revoke_refresh_token_family(
         update(RefreshToken)
         .where(
             RefreshToken.family_id == family_id,
+            RefreshToken.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.now(timezone.utc))
+    )
+
+async def create_password_reset_token(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    token_hash: str,
+    expires_at: datetime,
+) -> PasswordResetToken:
+    reset_token = PasswordResetToken(
+        user_id=user_id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+    )
+
+    db.add(reset_token)
+    await db.flush()
+
+    return reset_token
+
+async def get_password_reset_token_by_hash(
+    db: AsyncSession,
+    token_hash: str,
+    *,
+    for_update: bool = False,
+) -> PasswordResetToken | None:
+    query = select(PasswordResetToken).where(
+        PasswordResetToken.token_hash == token_hash
+    )
+
+    if for_update:
+        query = query.with_for_update()
+
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
+
+async def invalidate_unused_password_reset_tokens(
+    db: AsyncSession,
+    user_id: UUID,
+) -> None:
+    await db.execute(
+        update(PasswordResetToken)
+        .where(
+            PasswordResetToken.user_id == user_id,
+            PasswordResetToken.used_at.is_(None),
+        )
+        .values(used_at=datetime.now(timezone.utc))
+    )
+
+async def update_user_password(
+    db: AsyncSession,
+    user: User,
+    password_hash: str,
+) -> None:
+    user.password_hash = password_hash
+    user.token_version += 1
+    await db.flush()
+
+async def revoke_all_user_refresh_tokens(
+    db: AsyncSession,
+    user_id: UUID,
+) -> None:
+    await db.execute(
+        update(RefreshToken)
+        .where(
+            RefreshToken.user_id == user_id,
             RefreshToken.revoked_at.is_(None),
         )
         .values(revoked_at=datetime.now(timezone.utc))
