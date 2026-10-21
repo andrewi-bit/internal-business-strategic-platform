@@ -1,10 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
+from app.core.exception_handlers import (
+    http_exception_handler,
+    validation_exception_handler,
+    unhandled_exception_handler,
+)
+
 from app.settings import settings
 from app.api.auth.views import router as auth_router
-from app.api.email_verification.views import router as email_verification_router
+from app.api.email_verification.views import (
+    router as email_verification_router,
+)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -29,11 +38,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_exception_handler(
+    HTTPException,
+    http_exception_handler,
+)
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler,
+)
+app.add_exception_handler(
+    Exception,
+    unhandled_exception_handler,
+)
+
 app.include_router(
     auth_router,
     prefix=settings.API_V1_PREFIX,
 )
-
 app.include_router(
     email_verification_router,
     prefix=settings.API_V1_PREFIX,
