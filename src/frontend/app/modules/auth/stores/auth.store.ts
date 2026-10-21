@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
   const user = ref<any | null>(null)
   const pendingEmail = ref<string>('')
+  const hasJustSentOtp = ref<boolean>(false)
   const isLoading = ref<boolean>(false)
 
   const isAuthenticated = computed(() => !!accessToken.value)
@@ -36,6 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 2. Langsung hit API Resend OTP untuk mengirimkan kode OTP ke email
       try {
         await authApi.resendOtp(payload.email)
+        hasJustSentOtp.value = true
       } catch (err) {
         console.warn('Auto resend OTP failed, user can retry manually on OTP page:', err)
       }
@@ -78,6 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
     pendingEmail,
     isLoading,
     isAuthenticated,
+    hasJustSentOtp,
     setAccessToken,
     setPendingEmail,
     register,
