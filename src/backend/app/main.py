@@ -19,6 +19,10 @@ from app.api.role_requests.views import router as role_requests_router
 from app.api.roles.views import router as roles_router
 from app.api.users.views import router as users_router
 from app.api.permissions.views import router as permissions_router
+from app.api.master_data.views import router as master_data_router
+from app.api.products.views import router as products_router
+from app.api.tech_stacks.views import router as tech_stacks_router
+from app.api.partners.views import router as partners_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -82,6 +86,22 @@ app.include_router(
 )
 app.include_router(
     permissions_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    master_data_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    products_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    tech_stacks_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    partners_router,
     prefix=settings.API_V1_PREFIX,
 )
 
