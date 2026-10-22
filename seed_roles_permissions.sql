@@ -30,20 +30,33 @@ ON CONFLICT (code) DO UPDATE SET
     updated_at = NOW();
 
 INSERT INTO permissions (id, code, name, description)
-VALUES (
+VALUES
+(
     gen_random_uuid(),
     'role_request.review',
     'Review Role Request',
     'Review and approve or reject role requests.'
+),
+(
+    gen_random_uuid(),
+    'user.manage',
+    'Manage Users',
+    'View, filter, and update user information, roles, and account status.'
 )
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (code) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    updated_at = NOW();
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
 WHERE r.code = 'SUPER_ADMIN'
-  AND p.code = 'role_request.review'
+  AND p.code IN (
+      'role_request.review',
+      'user.manage'
+  )
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 COMMIT;
