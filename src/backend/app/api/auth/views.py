@@ -413,6 +413,11 @@ async def get_me(
         id=str(current_user.id),
         email=current_user.email,
         full_name=current_user.full_name,
+        role_id=(
+            str(current_user.role_id)
+            if current_user.role_id
+            else None
+        ),
         is_active=current_user.is_active,
     )
 

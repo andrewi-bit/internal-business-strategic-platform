@@ -14,6 +14,9 @@ from app.api.auth.views import router as auth_router
 from app.api.email_verification.views import (
     router as email_verification_router,
 )
+from app.api.divisions.views import router as divisions_router
+from app.api.role_requests.views import router as role_requests_router
+from app.api.roles.views import router as roles_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -57,6 +60,18 @@ app.include_router(
 )
 app.include_router(
     email_verification_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    divisions_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    role_requests_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    roles_router,
     prefix=settings.API_V1_PREFIX,
 )
 
