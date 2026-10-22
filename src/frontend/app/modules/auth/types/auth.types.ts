@@ -23,3 +23,8 @@ export interface ForgotPasswordResponse {
   message: string
   [key: string]: any
 }
+
+export interface ResetPasswordPayload {
+  token: string
+  new_password: string
+}

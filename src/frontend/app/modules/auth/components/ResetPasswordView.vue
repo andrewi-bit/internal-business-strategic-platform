@@ -194,12 +194,35 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import blueBg from '~/assets/blue-bg.png'
+import { useAuthStore } from '../stores/auth.store'
 
+const authStore = useAuthStore()
 const route = useRoute()
 const toast = useToast()
 
-// Ambil token dari URL query (?token=...)
-const token = computed(() => (route.query.token as string) || '')
+// Ambil token dari URL Hash (#token=...) dengan fallback ke Query (?token=...)
+const token = computed(() => {
+  // 1. Ambil dari route.hash (contoh: "#token=abc123xyz")
+  if (route.hash) {
+    const rawHash = route.hash.startsWith('#') ? route.hash.slice(1) : route.hash
+    const hashParams = new URLSearchParams(rawHash)
+    const val = hashParams.get('token')
+    if (val) return val
+  }
+
+  // 2. Fallback window.location.hash jika Nuxt router belum selesai membaca hash di client
+  if (import.meta.client && window.location.hash) {
+    const rawHash = window.location.hash.startsWith('#')
+      ? window.location.hash.slice(1)
+      : window.location.hash
+    const params = new URLSearchParams(rawHash)
+    const val = params.get('token')
+    if (val) return val
+  }
+
+  // 3. Fallback jika suatu saat ada yang memakai query biasa (?token=...)
+  return (route.query.token as string) || ''
+})
 
 // State Form
 const password = ref('')
@@ -257,29 +280,24 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    // Simulasi delay panggilan API ke Backend
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    // 1. Panggil action store (token dari URL hash & new password)
+    const response = await authStore.resetPassword(token.value, password.value)
 
-    /* Contoh jika nanti nembak Real API:
-    await $fetch('/api/v1/auth/reset-password', {
-      method: 'POST',
-      body: {
-        token: token.value,
-        password: password.value
-      }
-    })
-    */
-
-    isSuccess.value = true
+    // 2. Tampilkan Toast Sukses
     toast.add({
-      title: 'Success',
-      description: 'Your password has been successfully reset.',
+      title: 'Password Reset Successful',
+      description: response?.message || 'Your password has been updated. Redirecting to login...',
       color: 'success'
     })
+
+    // 3. Beri jeda 1.5 detik agar user sempat membaca toast, lalu pindah ke /login
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await navigateTo('/login', { replace: true })
   } catch (error: any) {
+    // 4. Tangkap error jika token tidak valid atau expired
     toast.add({
-      title: 'Reset Failed',
-      description: error?.message || 'Token is invalid or expired. Please request a new one.',
+      title: 'Reset Password Failed',
+      description: error?.message || 'Invalid or expired token. Please request a new link.',
       color: 'error'
     })
   } finally {

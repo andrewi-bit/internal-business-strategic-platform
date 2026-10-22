@@ -78,6 +78,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const resetPassword = async (token: string, newPassword: string) => {
+    isLoading.value = true
+    try {
+      const response = await authApi.resetPassword({
+        token,
+        new_password: newPassword
+      })
+      return response
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const clearAuth = () => {
     accessToken.value = null
     user.value = null
@@ -97,6 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
     resendOtp,
     verifyEmail,
     forgotPassword,
+    resetPassword,
     clearAuth
   }
 })
