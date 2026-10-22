@@ -42,6 +42,12 @@ VALUES
     'user.manage',
     'Manage Users',
     'View, filter, and update user information, roles, and account status.'
+),
+(
+    gen_random_uuid(),
+    'role.manage',
+    'Manage Roles and Permissions',
+    'Create and update roles, manage permission metadata, and assign permissions to roles.'
 )
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,
@@ -55,7 +61,8 @@ CROSS JOIN permissions p
 WHERE r.code = 'SUPER_ADMIN'
   AND p.code IN (
       'role_request.review',
-      'user.manage'
+      'user.manage',
+      'role.manage'
   )
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
