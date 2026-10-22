@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '~/modules/auth/stores/auth.store'
+import { ENDPOINTS } from './endpoints'
 
-// Baca base URL dari Nuxt runtimeConfig jika tersedia, atau fallback ke env / localhost:8000
 const getBaseUrl = () => {
   try {
     const config = useRuntimeConfig()
@@ -14,13 +14,14 @@ const getBaseUrl = () => {
 export const apiClient = axios.create({
   baseURL: getBaseUrl(),
   timeout: 10000,
+  withCredentials: true, // WAJIB: Mengizinkan pengiriman Cookie refresh token ke backend
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json'
   }
 })
 
-// Request Interceptor: Menempelkan Bearer Token langsung dari Memory State Pinia
+// Request Interceptor: Pasang Bearer Token dari Memory Pinia
 apiClient.interceptors.request.use(
   (config) => {
     try {
@@ -29,27 +30,84 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${authStore.accessToken}`
       }
     } catch {
-      // Pinia mungkin belum siap saat inisialisasi awal
+      // Pinia belum siap
     }
     return config
   },
   (error) => Promise.reject(error)
 )
 
-// Response Interceptor: Menyeragamkan pesan error dari backend
+// Response Interceptor: Menangani Error Pesan & Auto Refresh jika 401
+let isRefreshing = false
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = []
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error)
+    } else {
+      promise.resolve(token!)
+    }
+  })
+  failedQueue = []
+}
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
     const data = error.response?.data
+    const status = error.response?.status
 
+    // 1. Tangani Kasus 401 Unauthorized (Token Kedaluwarsa)
+    if (
+      status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes(ENDPOINTS.AUTH.LOGIN) &&
+      !originalRequest.url?.includes(ENDPOINTS.AUTH.REFRESH)
+    ) {
+      if (isRefreshing) {
+        // Jika sedang proses refresh, masukkan request ke antrean tunggu
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`
+            return apiClient(originalRequest)
+          })
+          .catch((err) => Promise.reject(err))
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const authStore = useAuthStore()
+        const newToken = await authStore.refreshToken()
+
+        if (newToken) {
+          processQueue(null, newToken)
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return apiClient(originalRequest)
+        }
+      } catch (refreshErr) {
+        processQueue(refreshErr, null)
+        const authStore = useAuthStore()
+        authStore.clearAuth()
+        // JANGAN panggil navigateTo('/login') di sini agar tidak memicu reload loop!
+        return Promise.reject(refreshErr)
+      } finally {
+        isRefreshing = false
+      }
+    }
+
+    // 2. Format Pesan Error Biasa dari Backend
     const message =
       data?.message ||
       (typeof data?.detail === 'string' ? data.detail : null) ||
       error.message ||
       'Request failed. Please try again.'
 
-    // Buat objek Error dan tempelkan juga error code jika butuh handling khusus
     const customError = new Error(message) as any
     customError.code = data?.error?.code || null
     customError.data = data || null

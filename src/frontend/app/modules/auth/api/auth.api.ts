@@ -5,7 +5,9 @@ import type {
   RegisterResponse,
   ForgotPasswordPayload,
   ForgotPasswordResponse,
-  ResetPasswordPayload
+  ResetPasswordPayload,
+  LoginPayload,
+  LoginResponse
 } from '../types/auth.types'
 
 export const authApi = {
@@ -39,6 +41,16 @@ export const authApi = {
     payload: ResetPasswordPayload
   ): Promise<{ success?: boolean; message: string }> {
     const response = await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, payload)
+    return response.data
+  },
+
+  async login(payload: LoginPayload): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, payload)
+    return response.data
+  },
+
+  async refresh(): Promise<any> {
+    const response = await apiClient.post(ENDPOINTS.AUTH.REFRESH)
     return response.data
   }
 }

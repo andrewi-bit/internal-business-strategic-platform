@@ -28,3 +28,22 @@ export interface ResetPasswordPayload {
   token: string
   new_password: string
 }
+
+export interface LoginPayload {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  success?: boolean
+  message?: string
+  data?: {
+    access_token?: string
+    token?: string
+    user?: any
+    is_verified?: boolean
+    [key: string]: any
+  }
+  access_token?: string
+  [key: string]: any
+}

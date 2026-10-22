@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { authApi } from '../api/auth.api'
-import type { RegisterPayload } from '../types/auth.types'
+import type { RegisterPayload, LoginPayload } from '../types/auth.types'
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
@@ -48,6 +48,44 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const login = async (payload: LoginPayload) => {
+    isLoading.value = true
+    try {
+      const response = await authApi.login(payload)
+      // Ekstrak token dari respon (mendukung response.data.access_token atau response.access_token)
+      const token =
+        response.data?.access_token ||
+        response.access_token ||
+        (typeof response === 'string' ? response : null)
+      if (token) {
+        accessToken.value = token
+      }
+      if (response.data?.user || response.user) {
+        user.value = response.data?.user || response.user
+      }
+      return response
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const refreshToken = async () => {
+    try {
+      const response = await authApi.refresh()
+      const token =
+        response.data?.access_token ||
+        response.access_token ||
+        (typeof response === 'string' ? response : null)
+      if (token) {
+        accessToken.value = token
+        return token
+      }
+      return null
+    } catch (err) {
+      clearAuth()
+      throw err
+    }
+  }
   /**
    * Action Resend OTP manual dari tombol
    */
@@ -107,6 +145,8 @@ export const useAuthStore = defineStore('auth', () => {
     setAccessToken,
     setPendingEmail,
     register,
+    login,
+    refreshToken,
     resendOtp,
     verifyEmail,
     forgotPassword,
