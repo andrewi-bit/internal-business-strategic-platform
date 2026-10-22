@@ -10,11 +10,7 @@
       Sign in to continue to your workspace.
     </p>
 
-    <form
-      class="mt-7 space-y-4"
-      novalidate
-      @submit.prevent="handleSubmit"
-    >
+    <form class="mt-7 space-y-4" novalidate @submit.prevent="handleSubmit">
       <AuthInput
         id="login-email"
         v-model="form.email"
@@ -37,7 +33,7 @@
 
       <div class="flex justify-end">
         <NuxtLink
-          to="/login"
+          to="/forgot-password"
           class="text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
         >
           Forgot password?
@@ -47,9 +43,9 @@
       <p
         v-if="formMessage"
         class="rounded-xl px-3.5 py-2.5 text-xs font-medium"
-        :class="formMessage.type === 'error'
-          ? 'bg-rose-50 text-rose-600'
-          : 'bg-blue-50 text-blue-700'"
+        :class="
+          formMessage.type === 'error' ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-700'
+        "
         role="status"
       >
         {{ formMessage.text }}
@@ -129,7 +125,7 @@ const form = reactive<LoginValues>({
 
 const errors = reactive<AuthFieldErrors<keyof LoginValues>>({})
 const isSubmitting = ref(false)
-const formMessage = ref<{ type: 'error' | 'info', text: string } | null>(null)
+const formMessage = ref<{ type: 'error' | 'info'; text: string } | null>(null)
 
 const handleSubmit = () => {
   formMessage.value = null

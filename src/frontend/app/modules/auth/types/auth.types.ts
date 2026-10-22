@@ -13,3 +13,13 @@ export interface RegisterResponse {
     [key: string]: any
   }
 }
+
+export interface ForgotPasswordPayload {
+  email: string
+}
+
+export interface ForgotPasswordResponse {
+  success?: boolean
+  message: string
+  [key: string]: any
+}
