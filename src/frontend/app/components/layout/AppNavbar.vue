@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '~/modules/auth/stores/auth.store'
 
+const authStore = useAuthStore()
 const isDropdownOpen = ref(false)
 const dropdownContainer = ref<HTMLElement | null>(null)
 
-// Data profil dummy (dapat disambungkan ke Pinia store nanti)
+// Data profil dummy (dapat disambungkan ke authStore.user nanti)
 const userData = ref({
   fullName: 'Roland Brilianto',
   roleTitle: 'Super Admin',
@@ -16,9 +18,9 @@ const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
 }
 
-const handleLogout = () => {
+const handleLogout = async () => {
   isDropdownOpen.value = false
-  navigateTo('/login')
+  await authStore.logout()
 }
 
 // Menutup popup saat klik di luar area dropdown

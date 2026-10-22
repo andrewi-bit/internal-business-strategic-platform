@@ -135,6 +135,19 @@ export const useAuthStore = defineStore('auth', () => {
     pendingEmail.value = ''
   }
 
+  const logout = async () => {
+    isLoading.value = true
+    try {
+      await authApi.logout()
+    } catch (err) {
+      console.warn('Backend logout failed or session already expired:', err)
+    } finally {
+      clearAuth()
+      isLoading.value = false
+      await navigateTo('/login', { replace: true, external: true })
+    }
+  }
+
   return {
     accessToken,
     user,
@@ -151,6 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
     verifyEmail,
     forgotPassword,
     resetPassword,
-    clearAuth
+    clearAuth,
+    logout
   }
 })

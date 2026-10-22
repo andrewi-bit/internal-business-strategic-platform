@@ -43,7 +43,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!authStore.isAuthenticated) {
     // Kalau belum login dan buka halaman internal, baru tendang ke login
     if (!isAuthPage) {
-      return navigateTo('/login', { replace: true })
+      return navigateTo('/login', { replace: true, external: true })
     }
     // Kalau buka halaman login/signup biasa, izinkan masuk
     return

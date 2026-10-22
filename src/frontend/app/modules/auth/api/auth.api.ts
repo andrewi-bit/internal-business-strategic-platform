@@ -52,5 +52,10 @@ export const authApi = {
   async refresh(): Promise<any> {
     const response = await apiClient.post(ENDPOINTS.AUTH.REFRESH)
     return response.data
+  },
+
+  async logout(): Promise<{ success?: boolean; message?: string }> {
+    const response = await apiClient.post(ENDPOINTS.AUTH.LOGOUT)
+    return response.data
   }
 }
