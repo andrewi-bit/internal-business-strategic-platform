@@ -111,10 +111,7 @@ docker compose -f deploy/compose/docker-compose.dev.yml ps
 ```
 
 ### 4. Verifikasi Layanan
-
-- **Backend API:** http://localhost:8000
 - **API Documentation (Swagger UI):** http://localhost:8000/docs
-- **API Documentation (ReDoc):** http://localhost:8000/redoc
 - **Health Check:** http://localhost:8000/health
 - **pgAdmin:** http://localhost:5050
 

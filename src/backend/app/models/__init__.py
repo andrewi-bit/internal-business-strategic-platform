@@ -6,6 +6,17 @@ from app.models.role_request_model import RoleRequest
 from app.models.user_model import User
 from app.models.email_otp_model import EmailOTP
 from app.models.token_model import RefreshToken
+from app.models.division_model import Division
+from app.models.company_size_model import CompanySize
+from app.models.customer_type_model import CustomerType
+from app.models.industry_model import Industry
+from app.models.legal_structure_model import LegalStructure
+from app.models.business_unit_model import BusinessUnit
+from app.models.project_status_model import ProjectStatus
+from app.models.product_status_model import ProductStatus
+from app.models.product_model import Product
+from app.models.tech_stack_model import TechStack
+from app.models.partner_model import Partner
 
 __all__ = [
     "Base",
@@ -16,4 +27,15 @@ __all__ = [
     "User",
     "EmailOTP",
     "RefreshToken",
+    "Division",
+    "CompanySize",
+    "CustomerType",
+    "Industry",
+    "LegalStructure",
+    "BusinessUnit",
+    "ProjectStatus",
+    "ProductStatus",
+    "Product",
+    "TechStack",
+    "Partner",
 ]

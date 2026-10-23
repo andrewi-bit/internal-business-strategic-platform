@@ -1,7 +1,15 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Text,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,6 +22,12 @@ class RoleRequest(Base):
         CheckConstraint(
             "status IN ('pending', 'approved', 'rejected')",
             name="ck_role_requests_status",
+        ),
+        Index(
+            "uq_role_requests_one_pending_per_user",
+            "user_id",
+            unique=True,
+            postgresql_where=text("status = 'pending'"),
         ),
     )
 
@@ -32,8 +46,9 @@ class RoleRequest(Base):
         ForeignKey("roles.id"),
         nullable=False,
     )
-    division: Mapped[str] = mapped_column(
-        String(150),
+    division_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("divisions.id"),
         nullable=False,
     )
     reason: Mapped[str] = mapped_column(
@@ -41,7 +56,7 @@ class RoleRequest(Base):
         nullable=False,
     )
     status: Mapped[str] = mapped_column(
-        String(20),
+        Text,
         nullable=False,
         default="pending",
         server_default="pending",

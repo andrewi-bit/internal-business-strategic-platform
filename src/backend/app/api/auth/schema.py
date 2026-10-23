@@ -36,6 +36,7 @@ class CurrentUserResponse(BaseModel):
     id: str
     email: EmailStr
     full_name: str
+    role_id: str | None = None
     is_active: bool
 
 class ForgotPasswordRequest(BaseModel):
