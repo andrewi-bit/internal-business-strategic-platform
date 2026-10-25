@@ -12,5 +12,8 @@ export const ENDPOINTS = {
     RESEND_OTP: '/api/v1/auth/resend-otp',
     GOOGLE_LOGIN: '/api/v1/auth/google/login',
     GOOGLE_CALLBACK: '/api/v1/auth/google/callback'
+  },
+  ROLES: {
+    BASE: '/api/v1/roles'
   }
 } as const

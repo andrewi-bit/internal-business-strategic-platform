@@ -11,9 +11,10 @@ import reportCard from '~/assets/report-card.png'
 import requestIllustration from '~/assets/request-role-illustration.png'
 
 import { useAuthStore } from '~/modules/auth/stores/auth.store'
+import { useRoleStore } from '~/modules/roles/stores/role.store'
 
 const authStore = useAuthStore()
-
+const roleStore = useRoleStore()
 // State Dropdown Profil di Header
 const isProfileDropdownOpen = ref(false)
 const profileDropdownRef = ref<HTMLElement | null>(null)
@@ -78,8 +79,26 @@ const divisionOptions = [
   'Corporate Strategy'
 ]
 
-const roleOptions = ['Engineer / Project Lead', 'Commercial / Partnership Officer', 'Executive']
-
+const getRoleTheme = (index: number) => {
+  const themes = [
+    {
+      border: 'border-emerald-200/90',
+      bgGradient: 'background: linear-gradient(145deg, #ffffff 60%, #e6fbf0 100%)',
+      badge: 'bg-emerald-100 text-emerald-700 ring-emerald-200'
+    },
+    {
+      border: 'border-blue-200/90',
+      bgGradient: 'background: linear-gradient(145deg, #ffffff 60%, #e8f4fd 100%)',
+      badge: 'bg-blue-100 text-blue-700 ring-blue-200'
+    },
+    {
+      border: 'border-purple-200/90',
+      bgGradient: 'background: linear-gradient(145deg, #ffffff 60%, #f5f0ff 100%)',
+      badge: 'bg-purple-100 text-purple-700 ring-purple-200'
+    }
+  ]
+  return themes[index % themes.length]
+}
 // =========================================================================
 // SMOOTH SCROLL MENGGUNAKAN REQUEST-ANIMATION-FRAME (DIJAMIN MULUS)
 // =========================================================================
@@ -164,6 +183,8 @@ onMounted(async () => {
     form.value.fullName = userData.full_name
     form.value.email = userData.email
   }
+
+  await roleStore.fetchRoles()
 })
 
 onUnmounted(() => {
@@ -645,65 +666,38 @@ const handleSubmitRequest = () => {
           </p>
         </div>
 
-        <!-- 3 Role Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <!-- Card 1: Executive -->
+        <!-- Dynamic Role Cards Grid -->
+        <!-- Skeleton saat loading -->
+        <div v-if="roleStore.isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div
-            class="relative overflow-hidden rounded-2xl border border-emerald-200/90 p-6 shadow-sm space-y-3.5 bg-white transition-all hover:shadow-md hover:-translate-y-0.5"
-            style="background: linear-gradient(145deg, #ffffff 60%, #e6fbf0 100%)"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
-              >
-                <UIcon name="i-lucide-user" class="h-5 w-5" />
-              </div>
-              <h3 class="text-sm font-bold text-slate-900">Executive</h3>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed font-normal">
-              Gain a high-level view of all portfolios and partnerships, access executive dashboards
-              and strategic reports, and monitor key performance indicators to support
-              organization-wide decisions.
-            </p>
-          </div>
+            v-for="n in 3"
+            :key="n"
+            class="h-44 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 animate-pulse"
+          />
+        </div>
 
-          <!-- Card 2: Commercial / Partnership Officer -->
+        <!-- Render data dari API -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div
-            class="relative overflow-hidden rounded-2xl border border-blue-200/90 p-6 shadow-sm space-y-3.5 bg-white transition-all hover:shadow-md hover:-translate-y-0.5"
-            style="background: linear-gradient(145deg, #ffffff 60%, #e8f4fd 100%)"
+            v-for="(role, index) in roleStore.roles"
+            :key="role.id"
+            class="relative overflow-hidden rounded-2xl border p-6 shadow-sm space-y-3.5 bg-white transition-all hover:shadow-md hover:-translate-y-0.5"
+            :class="getRoleTheme(index).border"
+            :style="getRoleTheme(index).bgGradient"
           >
             <div class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1"
+                :class="getRoleTheme(index).badge"
               >
                 <UIcon name="i-lucide-user" class="h-5 w-5" />
               </div>
               <h3 class="text-sm font-bold text-slate-900 leading-snug">
-                Commercial /<br />Partnership Officer
+                {{ role.name }}
               </h3>
             </div>
             <p class="text-xs text-slate-600 leading-relaxed font-normal">
-              View and manage partnership data, maintain partner information, track collaboration
-              history, and support business development initiatives across the organization.
-            </p>
-          </div>
-
-          <!-- Card 3: Engineer / Project Lead -->
-          <div
-            class="relative overflow-hidden rounded-2xl border border-purple-200/90 p-6 shadow-sm space-y-3.5 bg-white transition-all hover:shadow-md hover:-translate-y-0.5"
-            style="background: linear-gradient(145deg, #ffffff 60%, #f5f0ff 100%)"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700 ring-1 ring-purple-200"
-              >
-                <UIcon name="i-lucide-user" class="h-5 w-5" />
-              </div>
-              <h3 class="text-sm font-bold text-slate-900">Engineer / Project Lead</h3>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed font-normal">
-              Access project portfolios, update project information and milestones, collaborate with
-              partners, and track project-related activities and documents.
+              {{ role.description }}
             </p>
           </div>
         </div>
@@ -870,8 +864,8 @@ const handleSubmitRequest = () => {
                     class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 shadow-2xs outline-none focus:border-[#155EEF] focus:ring-1 focus:ring-[#155EEF] cursor-pointer"
                   >
                     <option value="" disabled selected>Select the role you want to request</option>
-                    <option v-for="role in roleOptions" :key="role" :value="role">
-                      {{ role }}
+                    <option v-for="role in roleStore.roles" :key="role.id" :value="role.id">
+                      {{ role.name }}
                     </option>
                   </select>
                 </div>
