@@ -12,9 +12,12 @@ import requestIllustration from '~/assets/request-role-illustration.png'
 
 import { useAuthStore } from '~/modules/auth/stores/auth.store'
 import { useRoleStore } from '~/modules/roles/stores/role.store'
+import { useDivisionStore } from '~/modules/divisions/stores/division.store'
 
 const authStore = useAuthStore()
 const roleStore = useRoleStore()
+const divisionStore = useDivisionStore()
+
 // State Dropdown Profil di Header
 const isProfileDropdownOpen = ref(false)
 const profileDropdownRef = ref<HTMLElement | null>(null)
@@ -69,15 +72,6 @@ const form = ref({
 })
 
 const isSubmitting = ref(false)
-
-const divisionOptions = [
-  'Technology',
-  'Commercial',
-  'Operations',
-  'Finance',
-  'Human Resources',
-  'Corporate Strategy'
-]
 
 const getRoleTheme = (index: number) => {
   const themes = [
@@ -183,8 +177,7 @@ onMounted(async () => {
     form.value.fullName = userData.full_name
     form.value.email = userData.email
   }
-
-  await roleStore.fetchRoles()
+  await Promise.all([roleStore.fetchRoles(), divisionStore.fetchDivisions()])
 })
 
 onUnmounted(() => {
@@ -838,11 +831,16 @@ const handleSubmitRequest = () => {
                   >
                   <select
                     v-model="form.division"
-                    class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 shadow-2xs outline-none focus:border-[#155EEF] focus:ring-1 focus:ring-[#155EEF] cursor-pointer"
+                    class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 shadow-2xs outline-none focus:border-[#155EEF] focus:ring-1 focus:ring-[#155EEF] cursor-pointer disabled:bg-slate-50 disabled:opacity-70"
+                    :disabled="divisionStore.isLoading"
                   >
-                    <option value="" disabled selected>Select your division</option>
-                    <option v-for="div in divisionOptions" :key="div" :value="div">
-                      {{ div }}
+                    <option value="" disabled selected>
+                      {{
+                        divisionStore.isLoading ? 'Loading divisions...' : 'Select your division'
+                      }}
+                    </option>
+                    <option v-for="div in divisionStore.divisions" :key="div.id" :value="div.id">
+                      {{ div.name }}
                     </option>
                   </select>
                 </div>

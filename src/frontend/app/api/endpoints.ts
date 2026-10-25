@@ -15,5 +15,8 @@ export const ENDPOINTS = {
   },
   ROLES: {
     BASE: '/api/v1/roles'
+  },
+  DIVISIONS: {
+    BASE: '/api/v1/divisions'
   }
 } as const
