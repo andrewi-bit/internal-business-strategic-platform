@@ -49,6 +49,15 @@ export const authApi = {
     return response.data
   },
 
+  async getGoogleLoginUrl(): Promise<{
+    success?: boolean
+    message?: string
+    data: { login_url: string }
+  }> {
+    const response = await apiClient.get(ENDPOINTS.AUTH.GOOGLE_LOGIN)
+    return response.data
+  },
+
   async refresh(): Promise<any> {
     const response = await apiClient.post(ENDPOINTS.AUTH.REFRESH)
     return response.data

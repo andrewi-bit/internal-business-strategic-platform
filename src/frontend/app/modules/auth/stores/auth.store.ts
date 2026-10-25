@@ -69,6 +69,99 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const openCenteredPopup = (url: string, title = 'Google Sign In', w = 500, h = 600) => {
+    const left = window.screenX + (window.outerWidth - w) / 2
+    const top = window.screenY + (window.outerHeight - h) / 2
+    return window.open(
+      url,
+      title,
+      `width=${w},height=${h},top=${top},left=${left},status=no,menubar=no,toolbar=no`
+    )
+  }
+
+  /**
+   * Action Login Google via OAuth Popup
+   */
+  const loginWithGoogle = async () => {
+    isLoading.value = true
+    try {
+      // 1. Dapatkan login URL dari backend
+      const res = await authApi.getGoogleLoginUrl()
+      const loginUrl = res.data?.login_url
+
+      if (!loginUrl) {
+        throw new Error('Google login URL not found.')
+      }
+
+      // 2. Buka popup OAuth Google
+      const popup = openCenteredPopup(loginUrl)
+
+      if (!popup) {
+        throw new Error('Popup blocked. Please allow popups for this site.')
+      }
+
+      // 3. Pantau sesi secara berkala (Polling Silent Refresh)
+      // Begitu callback backend selesai, cookie terpasang dan refreshToken() akan sukses
+      await new Promise<void>((resolve, reject) => {
+        let attempts = 0
+        const maxAttempts = 120 // batas waktu 60 detik (120 x 500ms)
+
+        const timer = setInterval(async () => {
+          attempts++
+
+          // Jika popup ditutup manual oleh user sebelum login selesai
+          if (popup.closed) {
+            clearInterval(timer)
+            // Cek sekali lagi barangkali tepat sebelum ditutup sudah sukses
+            try {
+              const token = await refreshToken()
+              if (token) {
+                return resolve()
+              }
+            } catch {
+              // Abaikan jika memang belum selesai
+            }
+            return resolve()
+          }
+
+          // Coba panggil refreshToken di background
+          try {
+            const token = await refreshToken()
+            if (token) {
+              clearInterval(timer)
+              try {
+                popup.close() // Otomatis tutup popup!
+              } catch {
+                // Abaikan jika browser membatasi close
+              }
+              return resolve()
+            }
+          } catch {
+            // Belum selesai proses di Google / backend, lanjutkan tunggu
+          }
+
+          if (attempts >= maxAttempts) {
+            clearInterval(timer)
+            try {
+              popup.close()
+            } catch {}
+            reject(new Error('Google sign in timed out. Please try again.'))
+          }
+        }, 600)
+      })
+
+      // 4. Jika token sudah didapat, redirect ke landing
+      if (isAuthenticated.value) {
+        await navigateTo('/landing')
+      }
+    } catch (err: any) {
+      console.error('Google login error:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const refreshToken = async () => {
     try {
       const response = await authApi.refresh()
@@ -159,6 +252,7 @@ export const useAuthStore = defineStore('auth', () => {
     setPendingEmail,
     register,
     login,
+    loginWithGoogle,
     refreshToken,
     resendOtp,
     verifyEmail,
