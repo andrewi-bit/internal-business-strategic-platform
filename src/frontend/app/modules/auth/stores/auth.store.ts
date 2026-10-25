@@ -241,6 +241,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await authApi.getMe()
+      if (res.data) {
+        user.value = res.data
+      }
+      return res.data
+    } catch (err) {
+      console.error('Failed to fetch current user profile:', err)
+      return null
+    }
+  }
+
   return {
     accessToken,
     user,
@@ -259,6 +272,7 @@ export const useAuthStore = defineStore('auth', () => {
     forgotPassword,
     resetPassword,
     clearAuth,
-    logout
+    logout,
+    fetchCurrentUser
   }
 })

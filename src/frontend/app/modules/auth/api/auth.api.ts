@@ -66,5 +66,20 @@ export const authApi = {
   async logout(): Promise<{ success?: boolean; message?: string }> {
     const response = await apiClient.post(ENDPOINTS.AUTH.LOGOUT)
     return response.data
+  },
+
+  async getMe(): Promise<{
+    success?: boolean
+    message?: string
+    data: {
+      id: string
+      email: string
+      full_name: string
+      role_id: string | null
+      is_active: boolean
+    }
+  }> {
+    const response = await apiClient.get(ENDPOINTS.AUTH.ME)
+    return response.data
   }
 }

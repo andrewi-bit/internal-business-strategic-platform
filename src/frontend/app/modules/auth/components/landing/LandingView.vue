@@ -37,10 +37,22 @@ const onDocumentClick = (event: MouseEvent) => {
 const toast = useToast()
 const isScrolled = ref(false)
 
-// Data User di Header
-const currentUser = ref({
-  fullName: 'Roland Brilianto',
-  initials: 'RB'
+const currentUser = computed(() => {
+  const u = authStore.user
+  const fullName = u?.full_name || 'User'
+  const initials =
+    fullName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word: string) => word[0].toUpperCase())
+      .join('') || 'U'
+  return {
+    fullName,
+    initials,
+    email: u?.email || '',
+    roleId: u?.role_id || null
+  }
 })
 
 // State Section Aktif
@@ -48,8 +60,8 @@ const activeSection = ref('home')
 
 // State Form Request Role
 const form = ref({
-  fullName: 'Andi Pratama',
-  email: 'andi.pratama@company.com',
+  fullName: '',
+  email: '',
   division: '',
   requestedRole: '',
   reason: ''
@@ -142,10 +154,16 @@ const handleScroll = () => {
   handleScrollSpy()
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', handleScroll, { passive: true })
   document.addEventListener('click', onDocumentClick)
   handleScroll()
+
+  const userData = await authStore.fetchCurrentUser()
+  if (userData) {
+    form.value.fullName = userData.full_name
+    form.value.email = userData.email
+  }
 })
 
 onUnmounted(() => {
@@ -317,6 +335,9 @@ const handleSubmitRequest = () => {
             <div class="px-3 py-2.5 border-b border-slate-100">
               <p class="text-xs font-semibold text-slate-900 leading-snug">
                 {{ currentUser.fullName }}
+              </p>
+              <p class="text-[11px] text-slate-500 truncate">
+                {{ currentUser.email }}
               </p>
               <div class="mt-1 flex items-center gap-1.5">
                 <span
