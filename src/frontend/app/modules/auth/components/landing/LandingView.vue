@@ -10,6 +10,30 @@ import collabCard from '~/assets/collab-card.png'
 import reportCard from '~/assets/report-card.png'
 import requestIllustration from '~/assets/request-role-illustration.png'
 
+import { useAuthStore } from '~/modules/auth/stores/auth.store'
+
+const authStore = useAuthStore()
+
+// State Dropdown Profil di Header
+const isProfileDropdownOpen = ref(false)
+const profileDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleProfileDropdown = () => {
+  isProfileDropdownOpen.value = !isProfileDropdownOpen.value
+}
+
+const handleLogout = async () => {
+  isProfileDropdownOpen.value = false
+  await authStore.logout()
+}
+
+// Menutup dropdown saat user klik di luar area
+const onDocumentClick = (event: MouseEvent) => {
+  if (profileDropdownRef.value && !profileDropdownRef.value.contains(event.target as Node)) {
+    isProfileDropdownOpen.value = false
+  }
+}
+
 const toast = useToast()
 const isScrolled = ref(false)
 
@@ -120,6 +144,8 @@ const handleScroll = () => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
+  document.addEventListener('click', onDocumentClick)
+  handleScroll()
 })
 
 onUnmounted(() => {
@@ -127,6 +153,7 @@ onUnmounted(() => {
     cancelAnimationFrame(animationFrameId)
   }
   window.removeEventListener('scroll', handleScroll)
+  document.removeEventListener('click', onDocumentClick)
 })
 
 const handleSubmitRequest = () => {
@@ -256,18 +283,61 @@ const handleSubmitRequest = () => {
           </button>
         </nav>
 
-        <!-- Right Action: Profile User (Lonceng Dihilangkan Sesuai Request) -->
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2.5 cursor-pointer">
+        <!-- Right Action: Profile User & Dropdown -->
+        <div ref="profileDropdownRef" class="relative">
+          <button
+            type="button"
+            class="flex items-center gap-2.5 rounded-full p-1 sm:px-2.5 sm:py-1 transition-all cursor-pointer hover:bg-white/10"
+            @click="toggleProfileDropdown"
+          >
             <div
               class="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white ring-2 ring-white/20 shadow-xs"
             >
               {{ currentUser.initials }}
             </div>
-            <span class="hidden sm:inline-block text-[13px] font-semibold text-white">
-              {{ currentUser.fullName }}
-            </span>
-            <UIcon name="i-lucide-chevron-down" class="h-3.5 w-3.5 text-blue-200" />
+            <div class="hidden sm:flex flex-col text-left">
+              <span class="text-[13px] font-semibold text-white leading-tight">
+                {{ currentUser.fullName }}
+              </span>
+              <span class="text-[11px] text-blue-200 font-medium"> Super Admin </span>
+            </div>
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="h-3.5 w-3.5 text-blue-200 transition-transform duration-200 ml-0.5"
+              :class="{ 'rotate-180': isProfileDropdownOpen }"
+            />
+          </button>
+
+          <!-- Dropdown Menu Popup -->
+          <div
+            v-show="isProfileDropdownOpen"
+            class="absolute right-0 mt-2.5 w-56 rounded-2xl border border-slate-100 bg-white p-2 text-slate-800 shadow-xl ring-1 ring-black/5 z-50 transition-all duration-150"
+          >
+            <!-- Header Profil di dalam Dropdown -->
+            <div class="px-3 py-2.5 border-b border-slate-100">
+              <p class="text-xs font-semibold text-slate-900 leading-snug">
+                {{ currentUser.fullName }}
+              </p>
+              <div class="mt-1 flex items-center gap-1.5">
+                <span
+                  class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-700/10"
+                >
+                  Super Admin
+                </span>
+              </div>
+            </div>
+
+            <div class="my-1 border-t border-slate-100" />
+
+            <!-- Tombol Logout -->
+            <button
+              type="button"
+              class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
+              @click="handleLogout"
+            >
+              <UIcon name="i-lucide-log-out" class="h-4 w-4 text-rose-500" />
+              <span>Log out</span>
+            </button>
           </div>
         </div>
       </div>
