@@ -23,6 +23,8 @@ from app.api.master_data.views import router as master_data_router
 from app.api.products.views import router as products_router
 from app.api.tech_stacks.views import router as tech_stacks_router
 from app.api.partners.views import router as partners_router
+from app.api.portfolios.views import router as portfolios_router
+from app.api.customers.views import router as customers_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -104,7 +106,14 @@ app.include_router(
     partners_router,
     prefix=settings.API_V1_PREFIX,
 )
-
+app.include_router(
+    customers_router,
+    prefix=settings.API_V1_PREFIX,
+)
+app.include_router(
+    portfolios_router,
+    prefix=settings.API_V1_PREFIX,
+)
 @app.get("/health")
 async def health_check():
     return {
