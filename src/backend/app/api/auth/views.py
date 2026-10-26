@@ -16,6 +16,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from redis.asyncio import Redis
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.api.auth import repository
 from app.api.auth.dependencies import bearer_scheme, get_current_user
@@ -33,6 +34,7 @@ from app.api.auth.usecase import (
     logout_user,
     request_password_reset,
     reset_password,
+    get_user_role_data,
 )
 from app.connections.redis import get_redis
 from app.connections.session import get_db
@@ -44,6 +46,7 @@ from app.core.security import (
     hash_refresh_token,
 )
 from app.models.user_model import User
+from app.models.role_model import Role
 from app.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -64,7 +67,6 @@ oauth.register(
 
 COOKIE_PATH = f"{settings.API_V1_PREFIX}/auth"
 
-
 def set_refresh_cookie(response: Response, token: str) -> None:
     response.set_cookie(
         key=settings.REFRESH_TOKEN_COOKIE_NAME,
@@ -76,7 +78,6 @@ def set_refresh_cookie(response: Response, token: str) -> None:
         path=COOKIE_PATH,
     )
 
-
 def clear_refresh_cookie(response: Response) -> None:
     response.delete_cookie(
         key=settings.REFRESH_TOKEN_COOKIE_NAME,
@@ -85,7 +86,6 @@ def clear_refresh_cookie(response: Response) -> None:
         samesite=settings.REFRESH_TOKEN_COOKIE_SAMESITE,
         path=COOKIE_PATH,
     )
-
 
 @router.get("/google/login")
 async def google_login(request: Request):
@@ -98,7 +98,6 @@ async def google_login(request: Request):
         message="URL login Google berhasil dibuat",
         data={"login_url": redirect_response.headers["location"]},
     )
-
 
 @router.get("/google/callback")
 async def google_callback(
@@ -236,11 +235,14 @@ async def google_callback(
             user.token_version,
         )
 
+        role_data = await get_user_role_data(db, user.role_id)
+
         return success_response(
             message="Login Google berhasil",
             data={
                 "access_token": access_token,
                 "token_type": "bearer",
+                **role_data,
             },
         )
 
@@ -268,7 +270,6 @@ async def google_callback(
                 "message": "Autentikasi Google gagal",
             },
         ) from exc
-
 
 @router.post(
     "/register",
@@ -304,7 +305,6 @@ async def register(
                 "message": "Email sudah terdaftar",
             },
         ) from exc
-
 
 @router.post(
     "/login",
@@ -355,7 +355,6 @@ async def login(
             detail=detail,
         ) from exc
 
-
 @router.post(
     "/forgot-password",
     status_code=status.HTTP_200_OK,
@@ -370,7 +369,6 @@ async def forgot_password(
         message=result.message,
         data=None,
     )
-
 
 @router.post(
     "/reset-password",
@@ -401,31 +399,36 @@ async def reset_password_endpoint(
             },
         ) from exc
 
-
 @router.get(
     "/me",
     status_code=status.HTTP_200_OK,
 )
 async def get_me(
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = CurrentUserResponse(
+    role = None
+
+    if current_user.role_id is not None:
+        result = await db.execute(
+            select(Role).where(Role.id == current_user.role_id)
+        )
+        role = result.scalar_one_or_none()
+
+    user_data = CurrentUserResponse(
         id=str(current_user.id),
         email=current_user.email,
         full_name=current_user.full_name,
-        role_id=(
-            str(current_user.role_id)
-            if current_user.role_id
-            else None
-        ),
+        role_id=str(current_user.role_id) if current_user.role_id else None,
+        role_name=role.name if role else None,
+        role_code=role.code if role else None,
         is_active=current_user.is_active,
     )
 
     return success_response(
         message="Data user berhasil diambil",
-        data=result.model_dump(),
+        data=user_data.model_dump(),
     )
-
 
 @router.post(
     "/refresh",
@@ -482,7 +485,6 @@ async def refresh(
                 "message": str(exc),
             },
         ) from exc
-
 
 @router.post(
     "/logout",

@@ -31,12 +31,17 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role_id: str | None = None
+    role_name: str | None = None
+    role_code: str | None = None
 
 class CurrentUserResponse(BaseModel):
     id: str
     email: EmailStr
     full_name: str
     role_id: str | None = None
+    role_name: str | None = None
+    role_code: str | None = None
     is_active: bool
 
 class ForgotPasswordRequest(BaseModel):

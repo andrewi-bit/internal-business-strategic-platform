@@ -1,8 +1,10 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+from app.models.role_model import Role
 from app.models.user_model import User
 
 from app.api.auth import repository
@@ -24,6 +26,28 @@ from app.core.security import (
 )
 
 logger = logging.getLogger(__name__)
+
+async def get_user_role_data(
+    db: AsyncSession,
+    role_id,
+):
+    if role_id is None:
+        return {
+            "role_id": None,
+            "role_name": None,
+            "role_code": None,
+        }
+
+    result = await db.execute(
+        select(Role).where(Role.id == role_id)
+    )
+    role = result.scalar_one_or_none()
+
+    return {
+        "role_id": str(role_id),
+        "role_name": role.name if role else None,
+        "role_code": role.code if role else None,
+    }
 
 async def register_user(
     db: AsyncSession,
@@ -106,12 +130,15 @@ async def login_user(
         await db.rollback()
         raise
 
+    role_data = await get_user_role_data(db, user.role_id)
+
     response = LoginResponse(
         access_token=create_access_token(
             str(user.id),
             user.token_version,
         ),
         token_type="bearer",
+        **role_data,
     )
 
     return response, raw_refresh_token
@@ -198,6 +225,8 @@ async def refresh_access_token(
         await db.rollback()
         raise
 
+    role_data = await get_user_role_data(db, user.role_id)
+
     return (
         LoginResponse(
             access_token=create_access_token(
@@ -205,6 +234,7 @@ async def refresh_access_token(
                 user.token_version,
             ),
             token_type="bearer",
+            **role_data,
         ),
         new_raw_token,
     )
