@@ -83,7 +83,7 @@
         :disabled="isTimerRunning || isRequesting"
         :loading="isRequesting"
         icon="i-lucide-rotate-ccw"
-        class="h-11 rounded-xl border-[#e2e8f0] bg-[#f8fafc] text-[13px] font-medium text-[#475569] transition-all hover:bg-[#f1f5f9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]"
+        class="h-11 rounded-xl cursor-pointer border-[#e2e8f0] bg-[#f8fafc] text-[13px] font-medium text-[#475569] transition-all hover:bg-[#f1f5f9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]"
         @click="handleGetOtp"
       >
         {{ isTimerRunning ? `Get OTP (${formattedTimer})` : 'Get OTP' }}
@@ -95,6 +95,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import blueBg from '~/assets/blue-bg.png'
+import { useAuthStore } from '../stores/auth.store'
 
 const props = withDefaults(
   defineProps<{
@@ -103,20 +104,24 @@ const props = withDefaults(
   }>(),
   {
     email: '',
-    durationSeconds: 300 // 5 menit (05:00)
+    durationSeconds: 300 // 5 menit (300 detik)
   }
 )
+
 const emit = defineEmits<{
   (e: 'verify', code: string): void
   (e: 'get-otp'): void
 }>()
 
+const authStore = useAuthStore()
 const route = useRoute()
 const toast = useToast()
 
+// 1. Resolusi Email: Ambil dari prop, state Pinia, atau URL Query (?email=...)
 const email = computed(() => {
   if (props.email) return props.email
-  return (route.query.email as string) || 'you@company.com'
+  const queryEmail = (route.query.email as string) || ''
+  return authStore.pendingEmail || queryEmail
 })
 
 const otpDigits = ref<string[]>([])
@@ -124,64 +129,127 @@ const otpValue = computed(() => otpDigits.value.join(''))
 
 const isVerifying = ref(false)
 const isRequesting = ref(false)
-const timeLeft = ref(props.durationSeconds)
+
+// =========================================================================
+// LOGIKA TIMER AKURAT (KEBAL REFRESH F5 DENGAN TIMESTAMP)
+// =========================================================================
+const timeLeft = ref(0)
 const isTimerRunning = computed(() => timeLeft.value > 0)
 let timerInterval: ReturnType<typeof setInterval> | null = null
 
+const getStorageKey = () => `otp_expires_at_${email.value}`
+
+// Menghitung sisa detik dari target timestamp yang tersimpan
+const calculateTimeLeft = () => {
+  if (!import.meta.client) return
+
+  const savedExpiresAt = sessionStorage.getItem(getStorageKey())
+  if (!savedExpiresAt) {
+    timeLeft.value = 0
+    if (timerInterval) {
+      clearInterval(timerInterval)
+      timerInterval = null
+    }
+    return
+  }
+
+  const diffMs = parseInt(savedExpiresAt, 10) - Date.now()
+  const diffSec = Math.ceil(diffMs / 1000)
+
+  if (diffSec > 0) {
+    timeLeft.value = diffSec
+  } else {
+    // 5 Menit sudah lewat / habis
+    timeLeft.value = 0
+    if (timerInterval) {
+      clearInterval(timerInterval)
+      timerInterval = null
+    }
+  }
+}
+
+// Memulai timer 5 menit baru
+const startTimer = (seconds = props.durationSeconds) => {
+  if (!import.meta.client) return
+
+  if (timerInterval) clearInterval(timerInterval)
+
+  // Target selesai = jam saat ini + detik durasi
+  const expiresAt = Date.now() + seconds * 1000
+  sessionStorage.setItem(getStorageKey(), expiresAt.toString())
+
+  calculateTimeLeft()
+
+  timerInterval = setInterval(() => {
+    calculateTimeLeft()
+  }, 1000)
+}
+
+// Format tampilan MM:SS
 const formattedTimer = computed(() => {
   const minutes = Math.floor(timeLeft.value / 60)
   const seconds = timeLeft.value % 60
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 })
 
-const startTimer = () => {
-  if (timerInterval) clearInterval(timerInterval)
-  timeLeft.value = props.durationSeconds
-
-  timerInterval = setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--
-    } else {
-      if (timerInterval) {
-        clearInterval(timerInterval)
-        timerInterval = null
-      }
-    }
-  }, 1000)
-}
-
+// =========================================================================
+// AKSI 1: USER KLIK TOMBOL "GET OTP" (MANUAL RESEND)
+// =========================================================================
 const handleGetOtp = async () => {
   if (isTimerRunning.value || isRequesting.value) return
   isRequesting.value = true
   try {
     emit('get-otp')
+    await authStore.resendOtp(email.value)
     toast.add({
       title: 'OTP Resent',
-      description: `A new 6-digit code has been sent to ${email.value}`,
+      description: `A new 6-digit verification code has been sent to ${email.value}`,
       color: 'success'
     })
-    startTimer()
+
+    // Mulai hitung mundur 5 menit baru
+    startTimer(props.durationSeconds)
+  } catch (error: any) {
+    toast.add({
+      title: 'Resend Failed',
+      description: error?.message || 'Failed to resend OTP. Please try again.',
+      color: 'error'
+    })
   } finally {
     isRequesting.value = false
   }
 }
 
+// =========================================================================
+// AKSI 2: USER KLIK TOMBOL "VERIFY CODE"
+// =========================================================================
 const handleVerify = async () => {
   if (otpValue.value.length !== 6) return
 
   isVerifying.value = true
   try {
     emit('verify', otpValue.value)
+    await authStore.verifyEmail(email.value, otpValue.value)
+
     toast.add({
-      title: 'Verification successful',
+      title: 'Verification Successful',
       description: 'Your email has been verified.',
       color: 'success'
     })
-    await navigateTo('/dashboard')
-  } catch (error) {
+
+    // Bersihkan storage timer dan pending state
+    if (import.meta.client) {
+      sessionStorage.removeItem(getStorageKey())
+    }
+    authStore.setPendingEmail('')
+    authStore.hasJustSentOtp = false
+
+    // Pindah ke landing page
+    await navigateTo('/login', { replace: true })
+  } catch (error: any) {
     toast.add({
-      title: 'Verification failed',
-      description: 'Please check your code and try again.',
+      title: 'Verification Failed',
+      description: error?.message || 'Invalid or expired OTP code. Please try again.',
       color: 'error'
     })
   } finally {
@@ -189,8 +257,48 @@ const handleVerify = async () => {
   }
 }
 
+// =========================================================================
+// LIFECYCLE & GUARD: DETEKSI DARI REGISTER vs REFRESH (F5)
+// =========================================================================
 onMounted(() => {
-  startTimer()
+  // 1. Guard: Jika email kosong, tendang ke signup
+  if (!email.value) {
+    toast.add({
+      title: 'Access Restricted',
+      description: 'Please complete registration first.',
+      color: 'warning'
+    })
+    navigateTo('/signup', { replace: true })
+    return
+  }
+
+  // 2. Sinkronkan email dari URL Query ke Pinia jika F5
+  if (!authStore.pendingEmail && email.value) {
+    authStore.setPendingEmail(email.value)
+  }
+
+  // 3. LOGIKA PATEN TIMER:
+  if (authStore.hasJustSentOtp) {
+    // KONDISI A: Baru saja selesai Register/Login (State Pinia bernilai true)
+    startTimer(props.durationSeconds)
+
+    // Matikan flag-nya sekarang juga di memori
+    // Jadi kalau nanti user tekan F5, flag ini sudah false!
+    authStore.hasJustSentOtp = false
+  } else {
+    // KONDISI B: Halaman di-refresh (F5) -> authStore.hasJustSentOtp pasti false
+    const savedExpiresAt = sessionStorage.getItem(getStorageKey())
+    if (savedExpiresAt) {
+      calculateTimeLeft()
+      if (timeLeft.value > 0) {
+        // Jika masih ada sisa waktu, lanjutkan countdown
+        timerInterval = setInterval(() => {
+          calculateTimeLeft()
+        }, 1000)
+      }
+      // JIKA 5 MENIT SUDAH HABIS (timeLeft === 0), TETAP MATI! TIDAK JALAN LAGI!
+    }
+  }
 })
 
 onBeforeUnmount(() => {

@@ -145,7 +145,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import blueBg from '~/assets/blue-bg.png'
+import { useAuthStore } from '../stores/auth.store'
 
+const authStore = useAuthStore()
 const toast = useToast()
 
 const email = ref('')
@@ -164,30 +166,33 @@ const emailError = computed(() => {
   return ''
 })
 
-// Tombol disabled jika sedang loading, email kosong, atau format email belum valid
+// Tombol disabled jika sedang loading, email kosong, atau format belum valid
 const isButtonDisabled = computed(() => {
   return isLoading.value || !email.value || !!emailError.value
 })
 
 const handleSubmit = async () => {
-  if (!email.value || emailError.value) return
+  if (isButtonDisabled.value) return
 
   isLoading.value = true
 
   try {
-    // Simulasi delay panggil API forgot-password
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    // 1. Tembak API Forgot Password Backend via Pinia Store
+    const response = await authStore.forgotPassword(email.value.trim())
 
+    // 2. Berhasil -> Tampilkan State 2 (Cek Email Kamu)
     isSubmitted.value = true
+
     toast.add({
-      title: 'Email Sent',
-      description: `Password reset link has been sent to ${email.value}`,
+      title: 'Instructions Sent',
+      description: response?.message || `Password reset link has been sent to ${email.value}`,
       color: 'success'
     })
   } catch (error: any) {
+    // 3. Gagal -> Tampilkan pesan error asli dari backend
     toast.add({
       title: 'Request Failed',
-      description: error?.message || 'Something went wrong. Please try again.',
+      description: error?.message || 'Failed to send reset instructions. Please try again.',
       color: 'error'
     })
   } finally {

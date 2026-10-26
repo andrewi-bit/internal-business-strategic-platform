@@ -1,18 +1,17 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: [
-    '@nuxt/eslint',
-    '@nuxt/ui',
-    '@pinia/nuxt',
-    'nuxt-echarts'
-  ],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt', 'nuxt-echarts'],
 
   devtools: {
     enabled: true
   },
 
   css: ['~/assets/css/main.css'],
-
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: 'http://localhost:8000'
+    }
+  },
   routeRules: {
     '/': { prerender: true, redirect: '/login' }
   },
