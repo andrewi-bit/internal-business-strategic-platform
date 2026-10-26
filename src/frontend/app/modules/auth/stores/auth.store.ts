@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref<boolean>(false)
 
   const isAuthenticated = computed(() => !!accessToken.value)
+  const hasRole = computed(() => !!user.value?.role_id)
 
   const setAccessToken = (token: string | null) => {
     accessToken.value = token
@@ -52,17 +53,28 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     try {
       const response = await authApi.login(payload)
-      // Ekstrak token dari respon (mendukung response.data.access_token atau response.access_token)
+      const data = response.data || response
+
+      // 1. Ekstrak Access Token
       const token =
-        response.data?.access_token ||
+        data?.access_token ||
         response.access_token ||
         (typeof response === 'string' ? response : null)
+
       if (token) {
         accessToken.value = token
       }
-      if (response.data?.user || response.user) {
-        user.value = response.data?.user || response.user
+
+      // 2. Simpan Data User & Role secara aman
+      const existingUserData = data?.user || response.user || {}
+
+      user.value = {
+        ...existingUserData,
+        role_id: data?.role_id ?? existingUserData.role_id ?? null,
+        role_name: data?.role_name ?? existingUserData.role_name ?? null,
+        role_code: data?.role_code ?? existingUserData.role_code ?? null
       }
+
       return response
     } finally {
       isLoading.value = false
@@ -152,7 +164,12 @@ export const useAuthStore = defineStore('auth', () => {
 
       // 4. Jika token sudah didapat, redirect ke landing
       if (isAuthenticated.value) {
-        await navigateTo('/landing')
+        const currentUser = await fetchCurrentUser()
+        if (currentUser?.role_id) {
+          await navigateTo('/dashboard')
+        } else {
+          await navigateTo('/landing')
+        }
       }
     } catch (err: any) {
       console.error('Google login error:', err)
@@ -260,6 +277,7 @@ export const useAuthStore = defineStore('auth', () => {
     pendingEmail,
     isLoading,
     isAuthenticated,
+    hasRole,
     hasJustSentOtp,
     setAccessToken,
     setPendingEmail,

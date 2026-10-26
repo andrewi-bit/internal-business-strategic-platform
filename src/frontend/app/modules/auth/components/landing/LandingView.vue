@@ -237,7 +237,7 @@ const handleSubmitRequest = () => {
           >
             B
           </div>
-          <span class="text-lg font-bold tracking-tight text-white">App Name</span>
+          <span class="text-lg font-bold tracking-tight text-white">IBSP</span>
         </div>
 
         <!-- Navigation Links Tengah -->
@@ -331,7 +331,7 @@ const handleSubmitRequest = () => {
               <span class="text-[13px] font-semibold text-white leading-tight">
                 {{ currentUser.fullName }}
               </span>
-              <span class="text-[11px] text-blue-200 font-medium"> Super Admin </span>
+              <span class="text-[11px] text-blue-200 font-medium"> Tidak Ada Role </span>
             </div>
             <UIcon
               name="i-lucide-chevron-down"
@@ -357,7 +357,7 @@ const handleSubmitRequest = () => {
                 <span
                   class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-700/10"
                 >
-                  Super Admin
+                  Tidak ada Role
                 </span>
               </div>
             </div>
@@ -491,13 +491,6 @@ const handleSubmitRequest = () => {
               decision-making across the organization.
             </p>
           </div>
-
-          <button
-            type="button"
-            class="self-start md:self-auto rounded-xl border border-blue-300 bg-white/90 backdrop-blur-sm px-4.5 py-2.5 text-xs font-bold text-[#155EEF] transition-all hover:bg-blue-50 hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/10 active:scale-95 cursor-pointer shadow-xs"
-          >
-            Learn more about our features
-          </button>
         </div>
 
         <!-- 4 Cards Grid dengan Glow Ambient Card Berwarna -->
@@ -928,7 +921,7 @@ const handleSubmitRequest = () => {
             >
               B
             </div>
-            <span class="text-lg font-bold tracking-tight text-white">App Name</span>
+            <span class="text-lg font-bold tracking-tight text-white">IBSP</span>
           </div>
           <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
             Internal Portfolio &amp; Partnership Management Platform.<br />

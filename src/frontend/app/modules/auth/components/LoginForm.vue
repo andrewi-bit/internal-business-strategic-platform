@@ -152,8 +152,12 @@ const handleSubmit = async () => {
       color: 'success'
     })
 
-    // 3. User sudah verified -> Masuk ke landing page
-    await navigateTo('/landing', { replace: true })
+    // 3. Arahkan user sesuai status kepemilikan role
+    if (authStore.hasRole) {
+      await navigateTo('/dashboard', { replace: true })
+    } else {
+      await navigateTo('/landing', { replace: true })
+    }
   } catch (error: any) {
     // 4. CEK APAKAH ERROR KARENA "EMAIL BELUM DIVERIFIKASI"
     if (error?.code === 'EMAIL_NOT_VERIFIED' || error?.message === 'Email belum diverifikasi') {
