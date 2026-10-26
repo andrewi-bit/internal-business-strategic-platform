@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +43,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
 
+    PORTFOLIO_VAT_RATE: Decimal = Decimal("0.11")
     PGADMIN_EMAIL: str = "admin@example.com"
     PGADMIN_PASSWORD: str = "admin"
 
