@@ -188,28 +188,59 @@ onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick)
 })
 
-const handleSubmitRequest = () => {
-  if (!form.value.division || !form.value.requestedRole || !form.value.reason) {
+const handleSubmitRequest = async () => {
+  if (!form.value.division) {
     toast.add({
-      title: 'Incomplete Form',
-      description: 'Please fill in all required fields.',
+      title: 'Division Required',
+      description: 'Please select your division.',
       color: 'error'
     })
     return
   }
 
-  isSubmitting.value = true
-  setTimeout(() => {
-    isSubmitting.value = false
+  if (!form.value.requestedRole) {
+    toast.add({
+      title: 'Role Required',
+      description: 'Please select the role you want to request.',
+      color: 'error'
+    })
+    return
+  }
+
+  const trimmedReason = form.value.reason.trim()
+  if (!trimmedReason || trimmedReason.length < 10) {
+    toast.add({
+      title: 'Invalid Reason',
+      description: 'Reason must be at least 10 characters long.',
+      color: 'error'
+    })
+    return
+  }
+
+  try {
+    const res = await roleStore.submitRoleRequest({
+      division_id: form.value.division,
+      requested_role_id: form.value.requestedRole,
+      reason: trimmedReason
+    })
+
     toast.add({
       title: 'Request Submitted',
-      description: 'Your role request has been submitted to the Super Admin.',
+      description: res.message || 'Your role request has been submitted to the Super Admin.',
       color: 'success'
     })
+
+    // Reset form setelah sukses
     form.value.division = ''
     form.value.requestedRole = ''
     form.value.reason = ''
-  }, 700)
+  } catch (err: any) {
+    toast.add({
+      title: 'Submission Failed',
+      description: err?.message || 'Failed to submit role request. Please try again.',
+      color: 'error'
+    })
+  }
 }
 </script>
 
@@ -890,16 +921,17 @@ const handleSubmitRequest = () => {
               <div class="flex justify-end pt-1">
                 <button
                   type="submit"
-                  :disabled="isSubmitting"
-                  class="inline-flex h-9.5 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-xs font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  :disabled="roleStore.isSubmitting"
+                  class="relative flex h-10 w-full items-center justify-center rounded-xl bg-[#155EEF] px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <UIcon
-                    v-if="isSubmitting"
-                    name="i-lucide-loader-circle"
-                    class="h-3.5 w-3.5 animate-spin"
+                    v-if="roleStore.isSubmitting"
+                    name="i-lucide-loader-2"
+                    class="size-4 animate-spin mr-2"
                   />
-                  <UIcon v-else name="i-lucide-send" class="h-3.5 w-3.5" />
-                  <span>Submit Request</span>
+                  <span>{{
+                    roleStore.isSubmitting ? 'Submitting...' : 'Submit Role Request'
+                  }}</span>
                 </button>
               </div>
             </form>

@@ -14,7 +14,9 @@ export const ENDPOINTS = {
     GOOGLE_CALLBACK: '/api/v1/auth/google/callback'
   },
   ROLES: {
-    BASE: '/api/v1/roles'
+    BASE: '/api/v1/roles',
+    REQUESTS: '/api/v1/role-requests',
+    MY_REQUEST: '/api/v1/role-requests/me'
   },
   DIVISIONS: {
     BASE: '/api/v1/divisions'
